@@ -1,32 +1,44 @@
 # Mood → Movement
 
-Mood → Movement is a focused wellness MVP built around one simple interaction:
+Mood → Movement is a focused wellness MVP that turns a user's current context into a short movement suggestion.
 
-**How do you feel now? → How do you want to feel? → How much time do you have?**
+## Core flow
 
-The app then suggests a short movement session for that moment.
+**Current mood → energy → desired feeling → environment → preferred intensity → available time → movement recommendation → post-session feedback**
 
-## MVP scope
+## Progressive personalization
 
-- current mood selection
-- desired feeling selection
-- available time selection
-- transparent rule-based movement recommendation
-- short session flow
-- post-session emotional feedback
-- local session history
+The MVP intentionally uses transparent scoring rules rather than opaque AI.
 
-## Product principle
+Each completed session stores:
+- current mood
+- desired feeling
+- energy level
+- environment
+- intensity preference
+- time available
+- suggested movement
+- post-session result: better, same or worse
 
-This is not a workout library and not a calorie tracker. The core job is to reduce the friction of deciding **what kind of movement makes sense right now**.
+When a movement has previously helped the user feel better in a similar context, it receives a higher score in future recommendations. The recommendation screen explains the main reasons behind the choice.
 
-## Current recommendation logic
+## Current features
 
-The first version uses explicit rules, not AI. That makes behavior easy to test and easy to explain before introducing more complex personalization.
+- mood and energy check-in
+- target emotional state
+- environment selection
+- intensity preference
+- 5, 10, 20 or 30-minute sessions
+- transparent recommendation engine
+- adaptive history-based scoring
+- post-session feedback
+- simple progress statistics
+- responsive mobile-first interface
+- local persistence using versioned localStorage
 
 ## Safety
 
-Mood → Movement is a wellness prototype and does not provide diagnosis, treatment, rehabilitation or medical advice.
+Mood → Movement is a wellness prototype. It does not provide diagnosis, treatment, rehabilitation, emergency guidance or medical advice. Users should stop activity if they feel pain, dizziness or unusual discomfort.
 
 ## Run locally
 
