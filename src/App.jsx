@@ -1,9 +1,10 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   ArrowLeft, ArrowRight, Check, Clock3, Dumbbell, Footprints,
-  HeartPulse, History, Home, Leaf, Music2, Play, RotateCcw,
+  HeartPulse, History, Home, Leaf, LogOut, Music2, Play, RotateCcw,
   Sparkles, Sun, Waves, Zap
 } from "lucide-react";
+import { apiFetch, authClient } from "./auth";
 
 const currentMoods = [
   { id:"tired", label:"Cansada", emoji:"😴" },
@@ -55,13 +56,6 @@ const library = [
   { id:"play", type:"Play circuit", icon:Sparkles, intensity:"moderate", min:10, env:["home","outdoor","anywhere"], targets:["playful","energized","free"], energy:["medium","high"], prompt:"Misture deslocamentos, passos e pequenos desafios para tornar a sessão mais espontânea." }
 ];
 
-const storageKey = "m2m-history-v2";
-
-function readHistory(){
-  try { return JSON.parse(localStorage.getItem(storageKey)) || []; }
-  catch { return []; }
-}
-
 function labelOf(list,id){ return list.find(x=>x.id===id)?.label || id; }
 
 function successScore(entry, movementId, context){
@@ -77,7 +71,6 @@ function successScore(entry, movementId, context){
 
 function recommend(context, history){
   const {current,target,time,energy,environment,intensity} = context;
-
   const scored = library.map(item=>{
     let score = 0;
     const reasons = [];
@@ -85,8 +78,7 @@ function recommend(context, history){
     if(item.targets.includes(target)){ score += 6; reasons.push("combina com o estado que você quer alcançar"); }
     if(item.energy.includes(energy)){ score += 4; reasons.push("respeita seu nível de energia"); }
     if(item.env.includes(environment) || environment==="anywhere"){ score += 3; reasons.push("funciona no ambiente escolhido"); }
-    if(item.min <= time){ score += 3; reasons.push("cabe no tempo disponível"); }
-    else score -= 5;
+    if(item.min <= time){ score += 3; reasons.push("cabe no tempo disponível"); } else score -= 5;
 
     if(intensity !== "surprise"){
       if(item.intensity === intensity){ score += 4; reasons.push("segue sua intensidade preferida"); }
@@ -121,6 +113,14 @@ function recommend(context, history){
 }
 
 export default function App(){
+  const [sessionLoading,setSessionLoading] = useState(true);
+  const [user,setUser] = useState(null);
+  const [authMode,setAuthMode] = useState("signin");
+  const [email,setEmail] = useState("");
+  const [password,setPassword] = useState("");
+  const [authError,setAuthError] = useState("");
+  const [authBusy,setAuthBusy] = useState(false);
+
   const [step,setStep] = useState(0);
   const [current,setCurrent] = useState("neutral");
   const [target,setTarget] = useState("energized");
@@ -129,35 +129,107 @@ export default function App(){
   const [environment,setEnvironment] = useState("anywhere");
   const [intensity,setIntensity] = useState("surprise");
   const [after,setAfter] = useState("");
-  const [history,setHistory] = useState(readHistory);
+  const [history,setHistory] = useState([]);
+  const [historyLoading,setHistoryLoading] = useState(false);
+  const [saveError,setSaveError] = useState("");
+
+  useEffect(()=>{
+    authClient.getSession().then(result=>{
+      setUser(result.data?.user || null);
+      setSessionLoading(false);
+    }).catch(()=>setSessionLoading(false));
+  },[]);
+
+  useEffect(()=>{
+    if(!user) { setHistory([]); return; }
+    setHistoryLoading(true);
+    apiFetch("/api/sessions")
+      .then(data=>setHistory(data.sessions || []))
+      .catch(()=>setHistory([]))
+      .finally(()=>setHistoryLoading(false));
+  },[user]);
 
   const context = {current,target,time,energy,environment,intensity};
   const recommendation = useMemo(()=>recommend(context,history),[current,target,time,energy,environment,intensity,history]);
 
-  const saveSession = value => {
+  const submitAuth = async (event) => {
+    event.preventDefault();
+    setAuthBusy(true);
+    setAuthError("");
+    try {
+      const result = authMode === "signup"
+        ? await authClient.signUp.email({ name: email.split("@")[0] || "Usuário", email, password })
+        : await authClient.signIn.email({ email, password });
+
+      if(result.error) throw new Error(result.error.message || "Não foi possível entrar.");
+
+      const session = await authClient.getSession();
+      if(!session.data?.user) throw new Error("Não foi possível confirmar a sessão.");
+      setUser(session.data.user);
+    } catch(error) {
+      setAuthError(error.message || "Não foi possível concluir o acesso.");
+    } finally {
+      setAuthBusy(false);
+    }
+  };
+
+  const signOut = async () => {
+    await authClient.signOut();
+    setUser(null);
+    setStep(0);
+    setHistory([]);
+  };
+
+  const saveSession = async value => {
     setAfter(value);
-    const item = {
-      id: Date.now(),
-      date: new Date().toISOString(),
-      ...context,
-      movementId: recommendation.id,
-      movement: recommendation.type,
-      after:value
-    };
-    setHistory(prev=>{
-      const next=[item,...prev].slice(0,50);
-      localStorage.setItem(storageKey,JSON.stringify(next));
-      return next;
-    });
+    setSaveError("");
+    try {
+      const payload = {
+        ...context,
+        movementId: recommendation.id,
+        movement: recommendation.type,
+        score: recommendation.score,
+        reasons: recommendation.reasons,
+        after:value
+      };
+      const data = await apiFetch("/api/sessions", {
+        method:"POST",
+        body:JSON.stringify(payload)
+      });
+      setHistory(prev=>[data.session,...prev].slice(0,50));
+    } catch(error) {
+      setSaveError(error.message || "Não foi possível salvar a sessão.");
+    }
   };
 
   const reset = () => {
     setStep(1);
     setAfter("");
+    setSaveError("");
   };
 
+  if(sessionLoading) return <main className="app authShell"><div className="authCard"><p className="kicker">MOOD → MOVEMENT</p><h2>Carregando seu espaço...</h2></div></main>;
+
+  if(!user) return <main className="app authShell">
+    <section className="authCard">
+      <div className="badge">MOOD → MOVEMENT</div>
+      <p className="kicker">{authMode==="signup" ? "CRIE SEU ESPAÇO" : "BEM-VINDA DE VOLTA"}</p>
+      <h1>{authMode==="signup" ? "Seu histórico começa aqui." : "Entre para continuar."}</h1>
+      <p className="authLead">Seu histórico fica salvo no Neon e ajuda o app a personalizar as próximas sugestões.</p>
+      <form onSubmit={submitAuth} className="authForm">
+        <label>E-mail<input type="email" value={email} onChange={e=>setEmail(e.target.value)} required autoComplete="email"/></label>
+        <label>Senha<input type="password" value={password} onChange={e=>setPassword(e.target.value)} required minLength={8} autoComplete={authMode==="signup"?"new-password":"current-password"}/></label>
+        {authError ? <div className="authError">{authError}</div> : null}
+        <button className="primary full" disabled={authBusy}>{authBusy ? "Processando..." : authMode==="signup" ? "Criar conta" : "Entrar"}</button>
+      </form>
+      <button className="textButton" onClick={()=>{setAuthError("");setAuthMode(authMode==="signup"?"signin":"signup")}}>
+        {authMode==="signup" ? "Já tenho uma conta" : "Quero criar uma conta"}
+      </button>
+    </section>
+  </main>;
+
   if(step===0) return <main className="app landing">
-    <div className="badge">MOOD → MOVEMENT</div>
+    <Header onHome={()=>setStep(0)} onSignOut={signOut} user={user}/>
     <section className="hero">
       <p className="kicker">FEEL → CHOOSE → MOVE → LEARN</p>
       <h1>Movimento que começa em como você está hoje.</h1>
@@ -168,7 +240,7 @@ export default function App(){
   </main>;
 
   if(step===7) return <main className="app">
-    <Header onHome={()=>setStep(0)}/>
+    <Header onHome={()=>setStep(0)} onSignOut={signOut} user={user}/>
     <section className="screen result">
       <p className="kicker">SUGESTÃO PARA AGORA</p>
       <h2>{recommendation.type}</h2>
@@ -184,7 +256,7 @@ export default function App(){
 
   if(step===8) {
     const Icon=recommendation.icon;
-    return <main className="app"><Header onHome={()=>setStep(0)}/>
+    return <main className="app"><Header onHome={()=>setStep(0)} onSignOut={signOut} user={user}/>
       <section className="screen session">
         <div className="sessionIcon"><Icon size={30}/></div>
         <p className="kicker">MOVIMENTO DE HOJE</p>
@@ -202,7 +274,7 @@ export default function App(){
     </main>;
   }
 
-  if(step===9) return <main className="app"><Header onHome={()=>setStep(0)}/>
+  if(step===9) return <main className="app"><Header onHome={()=>setStep(0)} onSignOut={signOut} user={user}/>
     <section className="screen feedback">
       <p className="kicker">DEPOIS DO MOVIMENTO</p>
       <h2>Como você se sente agora?</h2>
@@ -211,17 +283,18 @@ export default function App(){
           <button key={v} className={after===v?"selected":""} onClick={()=>saveSession(v)}><span>{e}</span><b>{l}</b></button>
         )}
       </div>
-      {after ? <div className="saved"><Check size={18}/> Feedback salvo. Isso ajuda a personalizar as próximas recomendações.</div> : null}
+      {after && !saveError ? <div className="saved"><Check size={18}/> Feedback salvo no seu histórico.</div> : null}
+      {saveError ? <div className="authError">{saveError}</div> : null}
       <button className="secondary" onClick={reset}><RotateCcw size={18}/> Fazer outra</button>
     </section>
   </main>;
 
-  if(step===10) return <main className="app"><Header onHome={()=>setStep(0)}/>
+  if(step===10) return <main className="app"><Header onHome={()=>setStep(0)} onSignOut={signOut} user={user}/>
     <section className="screen">
       <p className="kicker">SEU PADRÃO</p>
       <h2>Histórico</h2>
       <Stats history={history}/>
-      {history.length===0 ? <div className="empty">Nenhuma sessão concluída ainda.</div> :
+      {historyLoading ? <div className="empty">Carregando seu histórico...</div> : history.length===0 ? <div className="empty">Nenhuma sessão concluída ainda.</div> :
         <div className="history">
           {history.map(item=><article key={item.id}>
             <div>
@@ -248,7 +321,7 @@ export default function App(){
   const progress=Math.round((step/6)*100);
 
   return <main className="app">
-    <Header onHome={()=>setStep(0)}/>
+    <Header onHome={()=>setStep(0)} onSignOut={signOut} user={user}/>
     <section className="screen">
       <div className="progress"><span style={{width:progress+"%"}}/></div>
       <p className="step">0{step} / 06</p>
@@ -263,14 +336,11 @@ export default function App(){
   </main>;
 }
 
-function Header({onHome}){ return <header><button className="wordmark" onClick={onHome}>MOOD <span>→</span> MOVEMENT</button></header>; }
+function Header({onHome,onSignOut,user}){ return <header className="topbar"><button className="wordmark" onClick={onHome}>MOOD <span>→</span> MOVEMENT</button><div className="account"><span>{user?.email}</span><button onClick={onSignOut} aria-label="Sair"><LogOut size={16}/></button></div></header>; }
 
 function MoodGrid({items,value,onPick}){ return <div className="moodGrid">{items.map(i=><button key={i.id} className={value===i.id?"selected":""} onClick={()=>onPick(i.id)}><span>{i.emoji}</span><b>{i.label}</b></button>)}</div>; }
-
 function IconGrid({items,value,onPick}){ return <div className="moodGrid">{items.map(i=>{const Icon=i.icon;return <button key={i.id} className={value===i.id?"selected":""} onClick={()=>onPick(i.id)}><Icon size={27}/><b>{i.label}</b></button>})}</div>; }
-
 function ChoiceGrid({items,value,onPick}){ return <div className="choiceGrid">{items.map(i=><button key={i.id} className={value===i.id?"selected":""} onClick={()=>onPick(i.id)}><b>{i.label}</b></button>)}</div>; }
-
 function TimeGrid({value,onPick}){ return <div className="timeGrid">{times.map(v=><button key={v} className={value===v?"selected":""} onClick={()=>onPick(v)}><Clock3 size={20}/><b>{v}</b><span>min</span></button>)}</div>; }
 
 function RecommendationCard({recommendation}){
