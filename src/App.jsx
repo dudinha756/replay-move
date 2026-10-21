@@ -49,7 +49,7 @@ const musicPrefs = [
   {id:"no",label:"Sem música",emoji:"🤍",hint:"Prefiro silêncio"}
 ];
 
-const times = [5,10,20,30];
+const times = [5,10,20,30,45,60,90,120];
 
 const library = [
   {
@@ -160,6 +160,76 @@ const library = [
       30:["5 min · mobilidade","4 voltas · ponte, dead bug, bird dog, clam e prancha lateral","5 min · desacelerar"]
     }
   },
+
+  {
+    id:"gym_glutes_posterior", type:"Academia · Glúteo e posterior", icon:Dumbbell, intensity:"intense", min:60,
+    env:["gym"], targets:["strong","energized"], energy:["medium","high"],
+    prompt:"Sessão de musculação com foco em glúteos e posteriores, combinando padrões de extensão de quadril e flexão de joelho.",
+    tags:["academia","intermediário/avançado"],
+    routines:{
+      60:["Aquecimento · elevação pélvica unilateral 2×10","Stiff unilateral · 3×10","Mesa flexora · 3×8–12","Terra sumô · 3×8–10","Elevação pélvica · 3×8–12","Abdutora · 3×10–15"],
+      90:["Aquecimento · elevação pélvica unilateral 2×10","Stiff unilateral · 3×8–10","Terra sumô · 4×8–10","Mesa flexora · 4×8–12","Cadeira flexora · 3×10–12","Elevação pélvica · 4×8–12","Búlgaro · 3×8–10 por lado","Abdutora · 3×12–15","Panturrilha em pé · 4×10–15"],
+      120:["Aquecimento progressivo · 8–10 min","Stiff unilateral · 3×8–10","Terra sumô · 4×6–10","Mesa flexora · 4×8–12","Cadeira flexora · 4×10–12","Flexora unilateral · 3×10 por lado","Elevação pélvica · 4×8–12","Búlgaro · 3×8–10 por lado","Abdutora · 3×12–15","Panturrilha em pé · 4×10–15","Desacelerar · 5–8 min"]
+    }
+  },
+  {
+    id:"gym_shoulders_push", type:"Academia · Ombro, tríceps e peito", icon:Dumbbell, intensity:"intense", min:60,
+    env:["gym"], targets:["strong","focused"], energy:["medium","high"],
+    prompt:"Sessão de empurrar com foco em ombros, peitoral e tríceps, priorizando movimentos compostos antes dos isoladores.",
+    tags:["academia","intermediário/avançado"],
+    routines:{
+      60:["Aquecimento de ombros · 5–8 min","Supino · 3×8–12","Desenvolvimento · 3×8–12","Elevação lateral · 3×10–15","Peck deck inverso · 3×10–15","Tríceps corda · 3×10–15"],
+      90:["Aquecimento · elevação lateral leve + mobilidade","Supino · 4×8–12","Desenvolvimento · 4×8–12","Elevação lateral · 4×10–15","Peck deck inverso · 3×10–15","Elevação frontal · 3×10–12","Tríceps corda · 4×10–15","Tríceps unilateral na polia · 3×8–12"],
+      120:["Aquecimento progressivo · 8–10 min","Supino · 4×6–10","Desenvolvimento · 4×8–12","Elevação lateral · 4×10–15","Peck deck inverso · 4×10–15","Elevação frontal · 3×10–12","Tríceps corda · 4×10–15","Tríceps unilateral na polia · 4×8–12","Cardio leve opcional · 15–20 min"]
+    }
+  },
+  {
+    id:"gym_quads_glutes", type:"Academia · Quadríceps e glúteo", icon:Dumbbell, intensity:"intense", min:60,
+    env:["gym"], targets:["strong","energized"], energy:["medium","high"],
+    prompt:"Sessão de membros inferiores com prioridade para agachamentos e leg press antes dos isoladores.",
+    tags:["academia","intermediário/avançado"],
+    routines:{
+      60:["Aquecimento · agachamento com calcanhar elevado + mobilidade","Agachamento livre · 3×8–12","Leg press · 3×10–12","Extensora · 3×10–15","Afundo com step · 3×8–10 por lado","Abdutora · 3×12–15"],
+      90:["Aquecimento · 8 min","Agachamento livre · 4×8–12","Leg press · 4×10–12","Pêndulo · 3×8–12","Afundo com step · 3×8–10 por lado","Extensora · 4×8–12","Adutora · 3×10–15","Abdutora · 3×10–15","Coice na polia · 3×10–12"],
+      120:["Aquecimento progressivo · 10 min","Agachamento livre · 4×6–10","Leg press · 4×10–12","Pêndulo · 4×8–12","Afundo com step · 3×8–10 por lado","Extensora · 4×10–15","Extensora unilateral · 3×10 por lado","Adutora · 3×12–15","Abdutora · 3×12–15","Coice na polia · 3×10–15","Desacelerar · 5 min"]
+    }
+  },
+  {
+    id:"gym_back_biceps", type:"Academia · Costas e bíceps", icon:Dumbbell, intensity:"intense", min:60,
+    env:["gym"], targets:["strong","focused"], energy:["medium","high"],
+    prompt:"Sessão de puxar com exercícios para dorsais, parte média das costas e bíceps.",
+    tags:["academia","intermediário/avançado"],
+    routines:{
+      60:["Aquecimento escapular · 5–8 min","Puxada alta · 3×8–12","Remada baixa · 3×8–12","Remada unilateral · 3×8–12 por lado","Face pull · 3×12–15","Rosca direta · 3×8–12","Rosca martelo · 3×10–12"],
+      90:["Aquecimento escapular · 8 min","Puxada alta · 4×8–12","Remada curvada ou máquina · 4×8–12","Remada baixa · 3×10–12","Remada unilateral · 3×8–12 por lado","Pullover na polia · 3×10–15","Face pull · 3×12–15","Rosca direta · 3×8–12","Rosca martelo · 3×10–12"],
+      120:["Aquecimento · 10 min","Puxada alta · 4×8–12","Remada pesada · 4×6–10","Remada baixa · 4×8–12","Remada unilateral · 3×8–12 por lado","Pullover · 3×10–15","Face pull · 4×12–15","Rosca direta · 4×8–12","Rosca martelo · 3×10–12","Cardio leve opcional · 15–20 min"]
+    }
+  },
+  {
+    id:"endurance_cardio", type:"Cardio endurance", icon:HeartPulse, intensity:"moderate", min:45,
+    env:["gym","outdoor","anywhere"], targets:["energized","focused","free"], energy:["medium","high"],
+    prompt:"Sessão aeróbica contínua para quem tem mais tempo e quer acumular volume com intensidade sustentável.",
+    tags:["aeróbico","45–120 min"],
+    routines:{
+      45:["8 min · aquecimento leve","30 min · ritmo moderado e sustentável","7 min · desacelerar"],
+      60:["10 min · aquecimento","40 min · ritmo moderado","10 min · desacelerar"],
+      90:["15 min · aquecimento gradual","60 min · esforço moderado e conversável","15 min · desacelerar + mobilidade"],
+      120:["20 min · aquecimento gradual","80 min · esforço moderado e sustentável","20 min · retorno gradual e mobilidade"]
+    }
+  },
+  {
+    id:"interval_cardio", type:"Cardio intervalado avançado", icon:Zap, intensity:"intense", min:30,
+    env:["gym","outdoor","anywhere"], targets:["energized","strong","playful"], energy:["high"],
+    prompt:"Intervalos fortes com recuperação suficiente. Indicado para quem já tolera treino vigoroso e consegue manter técnica e controle.",
+    tags:["aeróbico","avançado"],
+    routines:{
+      30:["8 min · aquecimento","8× 1 min forte / 1 min leve","6 min · desacelerar"],
+      45:["10 min · aquecimento","10× 1 min forte / 90s leve","10 min · desacelerar"],
+      60:["12 min · aquecimento","8× 2 min forte / 2 min leve","16 min · moderado + desacelerar"],
+      90:["15 min · aquecimento","10× 2 min forte / 2 min leve","25 min · moderado","10 min · desacelerar"],
+      120:["20 min · aquecimento","10× 2 min forte / 2 min leve","45 min · moderado sustentável","15 min · desacelerar"]
+    }
+  },
   {
     id:"sleepreset", type:"Desacelerar para dormir", icon:Moon, intensity:"light", min:5,
     env:["home","anywhere"], targets:["calm","free"], energy:["low","medium"],
@@ -205,7 +275,9 @@ function recommend(context, history){
     if(item.energy.includes(energy)){ score += 4; reasons.push("respeita sua energia de hoje"); }
     if(item.env.includes(environment) || environment==="anywhere"){ score += 3; reasons.push("funciona onde você está"); }
     if(item.min <= time){ score += 3; reasons.push("cabe no tempo disponível"); }
-    else score -= 5;
+    else score -= 8;
+    if(item.routines?.[time]){ score += 3; reasons.push("tem um roteiro completo para esse tempo"); }
+    if(time >= 60 && !item.routines?.[time]) score -= 4;
 
     if(intensity !== "surprise"){
       if(item.intensity === intensity){ score += 4; reasons.push("segue a intensidade que você escolheu"); }
@@ -242,7 +314,7 @@ function recommend(context, history){
     ...chosen,
     duration: time,
     reasons: chosen.reasons.slice(0,4),
-    routine: chosen.routines[time] || chosen.routines[10]
+    routine: chosen.routines[time] || chosen.routines[30] || chosen.routines[20] || chosen.routines[10]
   };
 }
 
