@@ -1,50 +1,56 @@
 # Mood → Movement
 
-Mood → Movement is a personalized wellness web app that turns the user's current emotional and physical context into a short movement suggestion.
+Mood → Movement é um aplicativo de bem-estar para pessoas que têm dificuldade de começar a se movimentar.
 
-## Production architecture
+## O que o app faz
+O usuário informa:
+- estado atual;
+- nível de energia;
+- intenção para a sessão;
+- ambiente;
+- intensidade possível;
+- se música ajuda;
+- tempo disponível.
 
-- **Frontend:** React + Vite
-- **Hosting/API:** Vercel
-- **Authentication:** Neon Auth
-- **Database:** Neon Postgres
-- **Persistence:** authenticated session and music-profile data
-- **Recommendation engine:** transparent rule-based scoring enhanced by each user's outcomes
+O app entrega uma única sessão concreta, reduzindo a fricção de decisão.
 
-## Core movement flow
+## Biblioteca de movimento
+A biblioteca inclui:
+- caminhada;
+- mobilidade;
+- força com peso do corpo;
+- HIIT;
+- yoga;
+- Pilates;
+- respiração;
+- meditação;
+- dança;
+- desaceleração.
 
-Current mood → energy → desired feeling → environment → preferred intensity → available time → movement recommendation → post-session feedback.
+Algumas categorias foram inspiradas na amplitude de atividades do Garmin vívoactive 6, mas o usuário não precisa ter Garmin.
 
-## Music profile
+## Música
+A música é apenas um gatilho opcional. Não existe perfil musical, OAuth ou criação de playlists. Quando o usuário quer música, o app abre uma busca coerente com a sessão no Spotify.
 
-The app does not require Spotify OAuth.
+## Preparação alimentar
+A aba de alimentação oferece educação nutricional geral baseada em:
+- tipo de sessão;
+- duração;
+- intensidade;
+- objetivo (energia, ganho de massa, definição ou bem-estar).
 
-Each user can save:
-- favorite artists
-- favorite genres
-- favorite songs
-- favorite eras/decades
-- discovery preference: familiar, balanced or discovery-oriented
+Ela não prescreve dieta individual e não substitui nutricionista.
 
-The app combines this profile with the recommended activity, target mood, intensity and duration to build a personalized suggested playlist. Each item links to a Spotify search page; the app does not read or modify the user's Spotify account.
+## Garmin opcional
+O app possui uma área preparada para integração com Garmin Connect. A integração oficial depende de credenciais e aprovação no Garmin Connect Developer Program. Quando ativada, o objetivo é importar dados autorizados como atividade, frequência cardíaca e calorias. O restante do app funciona normalmente sem Garmin.
 
-## Required Vercel environment variables
+## Arquitetura
+- React + Vite
+- Vercel
+- Neon Auth
+- Neon Postgres
+- API serverless
+- recomendação transparente baseada em regras + histórico do usuário
 
-- `DATABASE_URL`
-- `NEON_AUTH_JWKS_URL`
-- `VITE_NEON_AUTH_URL`
-
-No Spotify credentials are required.
-
-## API
-
-- `GET /api/health`
-- `GET /api/sessions`
-- `POST /api/sessions`
-- `GET /api/music/profile`
-- `PUT /api/music/profile`
-- `POST /api/music/playlist`
-
-## Safety
-
-Mood → Movement is a wellness application. It does not diagnose, treat, rehabilitate, or replace individualized medical or professional advice.
+## Segurança
+O app não oferece diagnóstico, tratamento, reabilitação, prescrição médica ou dieta individual.
