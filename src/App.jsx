@@ -132,9 +132,10 @@ export default function App(){
   const [history,setHistory] = useState([]);
   const [historyLoading,setHistoryLoading] = useState(false);
   const [saveError,setSaveError] = useState("");
-  const [spotifyStatus,setSpotifyStatus] = useState({configured:false,connected:false,displayName:null});
-  const [spotifyLoading,setSpotifyLoading] = useState(false);
-  const [spotifyError,setSpotifyError] = useState("");
+  const [musicProfile,setMusicProfile] = useState({favoriteArtists:[],favoriteGenres:[],favoriteSongs:[],preferredEras:[],discoveryMode:"balanced"});
+  const [musicProfileLoaded,setMusicProfileLoaded] = useState(false);
+  const [musicSaving,setMusicSaving] = useState(false);
+  const [musicError,setMusicError] = useState("");
   const [playlistResult,setPlaylistResult] = useState(null);
   const [musicDiscovery,setMusicDiscovery] = useState("balanced");
 
@@ -148,7 +149,7 @@ export default function App(){
   useEffect(()=>{
     if(!user) {
       setHistory([]);
-      setSpotifyStatus({configured:false,connected:false,displayName:null});
+      setMusicProfileLoaded(false);
       return;
     }
     setHistoryLoading(true);
@@ -157,48 +158,56 @@ export default function App(){
       .catch(()=>setHistory([]))
       .finally(()=>setHistoryLoading(false));
 
-    apiFetch("/api/spotify/status")
-      .then(setSpotifyStatus)
-      .catch(()=>setSpotifyStatus({configured:false,connected:false,displayName:null}));
-
-    const params=new URLSearchParams(window.location.search);
-    if(params.get("spotify")){
-      window.history.replaceState({}, "", window.location.pathname);
-    }
+    apiFetch("/api/music/profile")
+      .then(data=>{
+        const p=data.profile || {};
+        setMusicProfile(p);
+        setMusicDiscovery(p.discoveryMode || "balanced");
+        setMusicProfileLoaded(true);
+      })
+      .catch(()=>{
+        setMusicProfileLoaded(true);
+      });
   },[user]);
 
-  const connectSpotify = async () => {
-    setSpotifyLoading(true);
-    setSpotifyError("");
+  const saveMusicProfile = async profile => {
+    setMusicSaving(true);
+    setMusicError("");
     try {
-      const data=await apiFetch("/api/spotify/connect",{method:"POST",body:"{}"});
-      window.location.assign(data.url);
+      await apiFetch("/api/music/profile",{
+        method:"PUT",
+        body:JSON.stringify(profile)
+      });
+      setMusicProfile(profile);
+      setMusicDiscovery(profile.discoveryMode || "balanced");
+      setStep(0);
     } catch(error) {
-      setSpotifyError(error.message || "Não foi possível conectar ao Spotify.");
-      setSpotifyLoading(false);
+      setMusicError(error.message || "Não foi possível salvar seu perfil musical.");
+    } finally {
+      setMusicSaving(false);
     }
   };
 
-  const createSpotifyPlaylist = async () => {
-    setSpotifyLoading(true);
-    setSpotifyError("");
+  const createSuggestedPlaylist = async () => {
+    setMusicSaving(true);
+    setMusicError("");
     setPlaylistResult(null);
     try {
-      const data=await apiFetch("/api/spotify/generate",{
+      const data=await apiFetch("/api/music/playlist",{
         method:"POST",
         body:JSON.stringify({
           activity:recommendation.type,
           targetMood:labelOf(targetMoods,target),
           intensity:recommendation.intensity,
           durationMinutes:recommendation.duration,
-          discovery:musicDiscovery
+          discoveryMode:musicDiscovery
         })
       });
       setPlaylistResult(data.playlist);
     } catch(error) {
-      setSpotifyError(error.message || "Não foi possível criar a playlist.");
+      setMusicError(error.message || "Não foi possível gerar a playlist.");
     } finally {
-      setSpotifyLoading(false);
+      setMusicSaving(false);
     }
   };
 
@@ -287,7 +296,10 @@ export default function App(){
       <p className="kicker">FEEL → CHOOSE → MOVE → LEARN</p>
       <h1>Movimento que começa em como você está hoje.</h1>
       <p className="lead">Conte seu humor, energia, ambiente e preferência. O app combina esses sinais com seu histórico para sugerir um movimento simples e progressivamente mais pessoal.</p>
-      <button className="primary" onClick={()=>setStep(1)}>Começar <ArrowRight size={18}/></button>
+      <div className="heroActions">
+        <button className="primary" onClick={()=>setStep(1)}>Começar <ArrowRight size={18}/></button>
+        <button className="secondary" onClick={()=>setStep(11)}><Music2 size={18}/> Meu perfil musical</button>
+      </div>
     </section>
     <p className="note">Protótipo de bem-estar. Não substitui avaliação médica, diagnóstico ou orientação profissional.</p>
   </main>;
@@ -303,15 +315,16 @@ export default function App(){
         <ul>{recommendation.reasons.map((r,i)=><li key={i}>{r}</li>)}</ul>
         <p className="learning">{recommendation.learned>0 ? "A personalização já está usando seu histórico." : "Ainda estamos aprendendo com você. Seu feedback após a sessão vai melhorar as próximas sugestões."}</p>
       </div>
-      <SpotifyPlaylistCard
-        status={spotifyStatus}
-        loading={spotifyLoading}
-        error={spotifyError}
+      <MusicPlaylistCard
+        profile={musicProfile}
+        loaded={musicProfileLoaded}
+        loading={musicSaving}
+        error={musicError}
         result={playlistResult}
         discovery={musicDiscovery}
         setDiscovery={setMusicDiscovery}
-        onConnect={connectSpotify}
-        onGenerate={createSpotifyPlaylist}
+        onEditProfile={()=>setStep(11)}
+        onGenerate={createSuggestedPlaylist}
         duration={recommendation.duration}
       />
       <button className="primary full" onClick={()=>setStep(8)}><Play size={18}/> Iniciar sessão</button>
@@ -351,6 +364,16 @@ export default function App(){
       {saveError ? <div className="authError">{saveError}</div> : null}
       <button className="secondary" onClick={reset}><RotateCcw size={18}/> Fazer outra</button>
     </section>
+  </main>;
+
+  if(step===11) return <main className="app"><Header onHome={()=>setStep(0)} onSignOut={signOut} user={user}/>
+    <MusicProfileScreen
+      profile={musicProfile}
+      loading={musicSaving}
+      error={musicError}
+      onCancel={()=>setStep(0)}
+      onSave={saveMusicProfile}
+    />
   </main>;
 
   if(step===10) return <main className="app"><Header onHome={()=>setStep(0)} onSignOut={signOut} user={user}/>
@@ -431,37 +454,101 @@ function Stats({history}){
 }
 
 
-function SpotifyPlaylistCard({status,loading,error,result,discovery,setDiscovery,onConnect,onGenerate,duration}){
+
+function splitField(value){
+  return value.split(/[\n,;]+/).map(x=>x.trim()).filter(Boolean);
+}
+
+function MusicProfileScreen({profile,loading,error,onCancel,onSave}){
+  const [artists,setArtists]=useState((profile.favoriteArtists||[]).join(", "));
+  const [genres,setGenres]=useState((profile.favoriteGenres||[]).join(", "));
+  const [songs,setSongs]=useState((profile.favoriteSongs||[]).join("\n"));
+  const [eras,setEras]=useState((profile.preferredEras||[]).join(", "));
+  const [mode,setMode]=useState(profile.discoveryMode || "balanced");
+
+  const submit=e=>{
+    e.preventDefault();
+    onSave({
+      favoriteArtists:splitField(artists),
+      favoriteGenres:splitField(genres),
+      favoriteSongs:splitField(songs),
+      preferredEras:splitField(eras),
+      discoveryMode:mode
+    });
+  };
+
+  return <section className="screen musicProfileScreen">
+    <p className="kicker">SEU GOSTO MUSICAL</p>
+    <h2>Monte seu perfil musical.</h2>
+    <p className="profileIntro">Essas informações ficam no Mood → Movement e são usadas para montar playlists sugeridas. Você não precisa conectar sua conta do Spotify.</p>
+    <form className="musicProfileForm" onSubmit={submit}>
+      <label>Artistas favoritos
+        <input value={artists} onChange={e=>setArtists(e.target.value)} placeholder="Ex.: Dua Lipa, The Weeknd, Coldplay"/>
+      </label>
+      <label>Gêneros que você gosta
+        <input value={genres} onChange={e=>setGenres(e.target.value)} placeholder="Ex.: pop, rock, pagode, eletrônico"/>
+      </label>
+      <label>Músicas favoritas
+        <textarea value={songs} onChange={e=>setSongs(e.target.value)} rows={5} placeholder={"Uma por linha\nEx.: Blinding Lights - The Weeknd"}/>
+      </label>
+      <label>Décadas / épocas preferidas
+        <input value={eras} onChange={e=>setEras(e.target.value)} placeholder="Ex.: anos 80, anos 2000, atual"/>
+      </label>
+      <div>
+        <span className="fieldTitle">Quanto você quer descobrir?</span>
+        <div className="musicModes">
+          {[["familiar","Mais familiar"],["balanced","Equilíbrio"],["discover","Mais descoberta"]].map(([v,l])=>
+            <button type="button" key={v} className={mode===v?"active":""} onClick={()=>setMode(v)}>{l}</button>
+          )}
+        </div>
+      </div>
+      {error ? <div className="authError">{error}</div> : null}
+      <div className="profileActions">
+        <button type="button" className="secondary" onClick={onCancel}>Cancelar</button>
+        <button className="primary" disabled={loading}>{loading?"Salvando...":"Salvar perfil musical"}</button>
+      </div>
+    </form>
+  </section>;
+}
+
+function MusicPlaylistCard({profile,loaded,loading,error,result,discovery,setDiscovery,onEditProfile,onGenerate,duration}){
+  const hasProfile=(profile.favoriteArtists||[]).length || (profile.favoriteGenres||[]).length || (profile.favoriteSongs||[]).length || (profile.preferredEras||[]).length;
+
   return <section className="spotifyCard">
     <div className="spotifyHead">
       <div className="spotifyIcon"><Music2 size={22}/></div>
       <div>
         <span>TRILHA PERSONALIZADA</span>
-        <b>Spotify para esta sessão</b>
+        <b>Playlist para esta sessão</b>
       </div>
     </div>
 
-    {!status.configured ? <>
-      <p>O recurso está preparado, mas a conexão do aplicativo com o Spotify ainda precisa ser ativada pelo administrador.</p>
-      <button className="secondary full" disabled>Spotify aguardando configuração</button>
-    </> : !status.connected ? <>
-      <p>Conecte sua conta para o Mood → Movement analisar, com sua autorização, seus artistas e faixas mais ouvidos e criar uma playlist privada de aproximadamente {duration} minutos.</p>
-      <button className="spotifyButton full" onClick={onConnect} disabled={loading}>{loading?"Conectando...":"Conectar Spotify"}</button>
-      <small>Você poderá revogar o acesso depois. O app não recebe sua senha do Spotify.</small>
+    {!loaded ? <p>Carregando seu perfil musical...</p> : !hasProfile ? <>
+      <p>Conte seus artistas, gêneros, músicas e épocas favoritas. O Mood → Movement usa isso para sugerir uma sequência musical personalizada sem acessar sua conta do Spotify.</p>
+      <button className="secondary full" onClick={onEditProfile}>Criar meu perfil musical</button>
     </> : <>
-      <div className="spotifyConnected"><Check size={15}/> Spotify conectado{status.displayName ? ` · ${status.displayName}` : ""}</div>
-      <p>Quanto você quer que a playlist fique perto do que já costuma ouvir?</p>
+      <p>A playlist será baseada no seu perfil musical e ajustada para cerca de {duration} minutos.</p>
       <div className="musicModes">
-        {[
-          ["familiar","Mais familiar"],
-          ["balanced","Equilíbrio"],
-          ["discover","Mais descoberta"]
-        ].map(([value,label])=><button key={value} className={discovery===value?"active":""} onClick={()=>setDiscovery(value)}>{label}</button>)}
+        {[["familiar","Mais familiar"],["balanced","Equilíbrio"],["discover","Mais descoberta"]].map(([value,label])=>
+          <button key={value} className={discovery===value?"active":""} onClick={()=>setDiscovery(value)}>{label}</button>
+        )}
       </div>
-      <button className="spotifyButton full" onClick={onGenerate} disabled={loading}>{loading?"Montando com seus gostos...":"Criar minha playlist"}</button>
-      {result ? <div className="playlistReady">
-        <div><b>{result.name}</b><span>{result.trackCount} faixas · ~{result.durationMinutes} min</span></div>
-        <a href={result.url} target="_blank" rel="noreferrer">Abrir no Spotify</a>
+      <div className="musicCardActions">
+        <button className="secondary" onClick={onEditProfile}>Editar perfil</button>
+        <button className="spotifyButton" onClick={onGenerate} disabled={loading}>{loading?"Montando...":"Gerar playlist sugerida"}</button>
+      </div>
+      {result ? <div className="suggestedPlaylist">
+        <div className="suggestedPlaylistHead">
+          <div><b>{result.title}</b><span>~{result.durationMinutes} min · {result.items.length} sugestões</span></div>
+        </div>
+        <div className="suggestedTrackList">
+          {result.items.map((item,index)=><a key={item.id} href={item.url} target="_blank" rel="noreferrer">
+            <span className="trackNo">{String(index+1).padStart(2,"0")}</span>
+            <div><b>{item.label}</b><span>{item.subtitle}</span></div>
+            <span className="openSpotify">Buscar no Spotify ↗</span>
+          </a>)}
+        </div>
+        <small>Os links abrem buscas no Spotify. O Mood → Movement não acessa nem altera sua conta.</small>
       </div> : null}
     </>}
     {error ? <div className="authError">{error}</div> : null}
