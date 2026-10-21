@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import {
   ArrowLeft, ArrowRight, Brain, Check, Clock3, Dumbbell, Footprints,
   HeartPulse, History, Home, Leaf, Music2, Play, RotateCcw, Sparkles,
-  Sun, Waves, Wind, Zap, ExternalLink, CircleDot, PersonStanding, Moon
+  Sun, Waves, Wind, Zap, ExternalLink, CircleDot, PersonStanding, Moon, Watch, Link2, Activity
 } from "lucide-react";
 
 const currentMoods = [
@@ -269,6 +269,9 @@ export default function App(){
   const [music,setMusic] = useState("yes");
   const [after,setAfter] = useState("");
   const [history,setHistory] = useState(readHistory);
+  const [garminOpen,setGarminOpen] = useState(false);
+  const [garminStatus,setGarminStatus] = useState({connected:false,available:true,reason:""});
+  const [garminLoading,setGarminLoading] = useState(false);
 
   const context = {current,target,time,energy,environment,intensity,music};
   const recommendation = useMemo(
@@ -294,12 +297,39 @@ export default function App(){
     });
   };
 
+  const openGarmin = async () => {
+    setGarminOpen(true);
+    setGarminLoading(true);
+    try{
+      const res=await fetch("/api/garmin/status");
+      const data=await res.json();
+      setGarminStatus(data);
+    }catch{
+      setGarminStatus({connected:false,available:false,reason:"Integração Garmin ainda não configurada neste ambiente."});
+    }finally{ setGarminLoading(false); }
+  };
+
+  const connectGarmin = async () => {
+    setGarminLoading(true);
+    try{
+      const res=await fetch("/api/garmin/connect");
+      const data=await res.json();
+      if(data.url) window.location.href=data.url;
+      else setGarminStatus(prev=>({...prev,available:false,reason:data.message || "A integração depende da aprovação e das credenciais do Garmin Connect Developer Program."}));
+    }catch{
+      setGarminStatus(prev=>({...prev,available:false,reason:"Não foi possível iniciar a conexão agora."}));
+    }finally{ setGarminLoading(false); }
+  };
+
   const reset = () => { setStep(1); setAfter(""); };
 
   if(step===0) return <main className="app landing">
     <header className="landingHeader">
       <div className="badge">MOOD → MOVEMENT</div>
-      <button className="historyMini" onClick={()=>setStep(11)}><History size={15}/> Meu histórico</button>
+      <div className="topActions">
+        <button className="historyMini" onClick={openGarmin}><Watch size={15}/> Garmin</button>
+        <button className="historyMini" onClick={()=>setStep(11)}><History size={15}/> Meu histórico</button>
+      </div>
     </header>
 
     <section className="hero">
@@ -328,7 +358,13 @@ export default function App(){
       <div><Footprints/><span>Caminhar</span></div><div><Dumbbell/><span>Fortalecer</span></div>
       <div><Music2/><span>Dançar</span></div><div><Waves/><span>Mobilizar</span></div>
     </section>
+    <section className="garminTeaser">
+      <div className="garminTeaserIcon"><Watch size={24}/></div>
+      <div><span>OPCIONAL</span><b>Usa Garmin?</b><p>Vincule o Garmin Connect para associar frequência cardíaca, calorias e atividades registradas às suas sessões. Sem Garmin, nada muda.</p></div>
+      <button onClick={openGarmin}>Conectar <Link2 size={15}/></button>
+    </section>
     <p className="note">Ferramenta de bem-estar e apoio à decisão. Não substitui avaliação médica, diagnóstico, tratamento ou orientação profissional.</p>
+    {garminOpen && <GarminPanel status={garminStatus} loading={garminLoading} onConnect={connectGarmin} onClose={()=>setGarminOpen(false)}/>}
   </main>;
 
   if(step===8) return <main className="app">
@@ -392,6 +428,12 @@ export default function App(){
         )}
       </div>
       {after ? <div className="saved"><Check size={18}/> Feedback salvo. A próxima recomendação pode usar esse padrão.</div> : null}
+      <div className="garminAfter">
+        <Watch size={20}/>
+        <div><b>Treinou com Garmin?</b><span>Se sua conta estiver conectada, frequência cardíaca, calorias e atividade poderão ser associadas quando o Garmin Connect sincronizar.</span></div>
+        <button onClick={openGarmin}>Ver conexão</button>
+      </div>
+      {garminOpen && <GarminPanel status={garminStatus} loading={garminLoading} onConnect={connectGarmin} onClose={()=>setGarminOpen(false)}/>} 
       <button className="secondary" onClick={reset}><RotateCcw size={18}/> Fazer outra sessão</button>
     </section>
   </main>;
@@ -479,5 +521,25 @@ function Stats({history}){
     <div><span>Sessões concluídas</span><b>{completed}</b></div>
     <div><span>Terminou melhor</span><b>{rate}%</b></div>
     <div><span>Seu melhor padrão</span><b>{favorite}</b></div>
+  </div>;
+}
+function GarminPanel({status,loading,onConnect,onClose}){
+  return <div className="modalBackdrop" role="dialog" aria-modal="true" aria-label="Garmin Connect">
+    <div className="garminPanel">
+      <button className="modalClose" onClick={onClose}>×</button>
+      <div className="garminLogoFake"><Watch size={28}/></div>
+      <p className="kicker">GARMIN CONNECT · OPCIONAL</p>
+      <h3>Registre o que aconteceu no seu corpo.</h3>
+      <p>O Mood → Movement funciona sem relógio. Se você usa Garmin, a conexão pode trazer dados sincronizados pelo Garmin Connect para enriquecer o histórico da sessão.</p>
+      <div className="metricPreview">
+        <div><HeartPulse/><span>Frequência cardíaca</span></div>
+        <div><Zap/><span>Calorias</span></div>
+        <div><Activity/><span>Atividade registrada</span></div>
+      </div>
+      {status.connected ? <div className="garminConnected"><Check size={18}/> Garmin Connect vinculado</div> :
+        <button className="primary full" disabled={loading} onClick={onConnect}><Link2 size={18}/>{loading?"Verificando...":"Conectar Garmin Connect"}</button>}
+      {!status.available && status.reason ? <p className="integrationNotice">{status.reason}</p> : null}
+      <small>A conexão usa autorização oficial do Garmin Connect. O app não pede sua senha do Garmin.</small>
+    </div>
   </div>;
 }
