@@ -1,54 +1,38 @@
 # Mood → Movement
 
-Mood → Movement is a focused wellness MVP that turns a user's current context into a short movement suggestion.
+Mood → Movement is a personalized wellness MVP that turns a user's current emotional and physical context into a short movement suggestion.
 
-## Core flow
+## Production architecture
 
-**Current mood → energy → desired feeling → environment → preferred intensity → available time → movement recommendation → post-session feedback**
+- **Frontend:** React + Vite
+- **Hosting/API:** Vercel
+- **Authentication:** Neon Auth (Managed Better Auth)
+- **Database:** Neon Postgres
+- **Persistence:** authenticated session history stored per user
+- **Recommendation engine:** transparent rule-based scoring enhanced by each user's historical outcomes
 
-## Progressive personalization
+## Flow
 
-The MVP intentionally uses transparent scoring rules rather than opaque AI.
+Current mood → energy → desired feeling → environment → preferred intensity → available time → movement recommendation → post-session feedback.
 
-Each completed session stores:
-- current mood
-- desired feeling
-- energy level
-- environment
-- intensity preference
-- time available
-- suggested movement
-- post-session result: better, same or worse
+## Personalization
 
-When a movement has previously helped the user feel better in a similar context, it receives a higher score in future recommendations. The recommendation screen explains the main reasons behind the choice.
+Completed sessions store the full recommendation context. A movement gets a higher future score when it previously ended with the user reporting that they felt better in a similar context.
 
-## Current features
+## Required Vercel environment variables
 
-- mood and energy check-in
-- target emotional state
-- environment selection
-- intensity preference
-- 5, 10, 20 or 30-minute sessions
-- transparent recommendation engine
-- adaptive history-based scoring
-- post-session feedback
-- simple progress statistics
-- responsive mobile-first interface
-- local persistence using versioned localStorage
+- `DATABASE_URL` — Neon pooled connection string
+- `NEON_AUTH_JWKS_URL` — Neon Auth JWKS endpoint
+- `VITE_NEON_AUTH_URL` — public Neon Auth base URL
+
+Never commit the database connection string to GitHub.
+
+## API
+
+- `GET /api/health` — database connectivity check
+- `GET /api/sessions` — authenticated user's completed sessions
+- `POST /api/sessions` — save a completed session
 
 ## Safety
 
-Mood → Movement is a wellness prototype. It does not provide diagnosis, treatment, rehabilitation, emergency guidance or medical advice. Users should stop activity if they feel pain, dizziness or unusual discomfort.
-
-## Run locally
-
-```bash
-npm install
-npm run dev
-```
-
-## Build
-
-```bash
-npm run build
-```
+Mood → Movement is a wellness application. It does not diagnose, treat, rehabilitate, or replace individualized medical or professional advice.
