@@ -1,32 +1,32 @@
 import React, { useMemo, useState } from "react";
 import {
-  ArrowLeft, ArrowRight, Check, Clock3, Dumbbell, Footprints,
-  HeartPulse, History, Home, Leaf, Music2, Play, RotateCcw,
-  Sparkles, Sun, Waves, Zap
+  ArrowLeft, ArrowRight, Brain, Check, Clock3, Dumbbell, Footprints,
+  HeartPulse, History, Home, Leaf, Music2, Play, RotateCcw, Sparkles,
+  Sun, Waves, Wind, Zap, ExternalLink, CircleDot, PersonStanding, Moon
 } from "lucide-react";
 
 const currentMoods = [
-  { id:"tired", label:"Cansada", emoji:"😴" },
-  { id:"stressed", label:"Estressada", emoji:"😵‍💫" },
-  { id:"anxious", label:"Ansiosa", emoji:"😬" },
-  { id:"neutral", label:"Neutra", emoji:"😐" },
-  { id:"good", label:"Bem", emoji:"🙂" },
-  { id:"energized", label:"Energizada", emoji:"⚡" }
+  { id:"tired", label:"Cansada", emoji:"😴", hint:"Pouca disposição" },
+  { id:"stressed", label:"Estressada", emoji:"😵‍💫", hint:"Corpo acelerado" },
+  { id:"anxious", label:"Ansiosa", emoji:"😬", hint:"Mente inquieta" },
+  { id:"neutral", label:"Neutra", emoji:"😐", hint:"Sem um estado forte" },
+  { id:"good", label:"Bem", emoji:"🙂", hint:"Disposta a se mover" },
+  { id:"energized", label:"Energizada", emoji:"⚡", hint:"Energia sobrando" }
 ];
 
 const targetMoods = [
-  { id:"calm", label:"Mais calma", emoji:"🌿" },
-  { id:"focused", label:"Mais focada", emoji:"🎯" },
-  { id:"energized", label:"Mais energizada", emoji:"🔥" },
-  { id:"strong", label:"Mais forte", emoji:"💪" },
-  { id:"free", label:"Mais leve", emoji:"🪽" },
-  { id:"playful", label:"Mais divertida", emoji:"✨" }
+  { id:"calm", label:"Mais calma", emoji:"🌿", hint:"Desacelerar" },
+  { id:"focused", label:"Mais focada", emoji:"🎯", hint:"Organizar a mente" },
+  { id:"energized", label:"Mais energizada", emoji:"🔥", hint:"Ganhar impulso" },
+  { id:"strong", label:"Mais forte", emoji:"💪", hint:"Sentir potência" },
+  { id:"free", label:"Mais leve", emoji:"🪽", hint:"Soltar corpo e cabeça" },
+  { id:"playful", label:"Mais divertida", emoji:"✨", hint:"Mover sem pressão" }
 ];
 
 const energies = [
-  {id:"low",label:"Baixa",emoji:"🪫"},
-  {id:"medium",label:"Média",emoji:"🔋"},
-  {id:"high",label:"Alta",emoji:"⚡"}
+  {id:"low",label:"Baixa",emoji:"🪫",hint:"Quero começar bem leve"},
+  {id:"medium",label:"Média",emoji:"🔋",hint:"Consigo fazer um pouco mais"},
+  {id:"high",label:"Alta",emoji:"⚡",hint:"Quero gastar energia"}
 ];
 
 const environments = [
@@ -37,25 +37,144 @@ const environments = [
 ];
 
 const intensities = [
-  {id:"light",label:"Leve"},
-  {id:"moderate",label:"Moderada"},
-  {id:"intense",label:"Intensa"},
-  {id:"surprise",label:"Me surpreenda"}
+  {id:"light",label:"Leve",hint:"Quase sem esforço"},
+  {id:"moderate",label:"Moderada",hint:"Sinto que trabalhei"},
+  {id:"intense",label:"Intensa",hint:"Quero suar"},
+  {id:"surprise",label:"Me surpreenda",hint:"Escolha por mim"}
+];
+
+const musicPrefs = [
+  {id:"yes",label:"Quero música",emoji:"🎧",hint:"Use som como gatilho para começar"},
+  {id:"maybe",label:"Talvez",emoji:"🎵",hint:"Me dê a opção na sessão"},
+  {id:"no",label:"Sem música",emoji:"🤍",hint:"Prefiro silêncio"}
 ];
 
 const times = [5,10,20,30];
 
 const library = [
-  { id:"mobility", type:"Mobilidade", icon:Waves, intensity:"light", min:5, env:["home","gym","outdoor","anywhere"], targets:["calm","free","focused"], energy:["low","medium"], prompt:"Movimentos lentos para ombros, quadris e coluna, com respiração confortável." },
-  { id:"walk", type:"Caminhada", icon:Footprints, intensity:"light", min:10, env:["outdoor","gym","anywhere"], targets:["calm","focused","free","energized"], energy:["low","medium","high"], prompt:"Caminhe em ritmo confortável e constante, observando sua respiração." },
-  { id:"dance", type:"Dança livre", icon:Music2, intensity:"moderate", min:5, env:["home","anywhere"], targets:["energized","playful","free"], energy:["low","medium","high"], prompt:"Escolha uma música que combine com o momento e mova-se sem buscar técnica." },
-  { id:"strength", type:"Força essencial", icon:Dumbbell, intensity:"moderate", min:15, env:["home","gym","anywhere"], targets:["strong","focused","energized"], energy:["medium","high"], prompt:"Faça um circuito simples de agachar, empurrar, puxar e estabilizar." },
-  { id:"cardio", type:"Cardio curto", icon:HeartPulse, intensity:"intense", min:10, env:["home","gym","outdoor","anywhere"], targets:["energized","strong","playful"], energy:["medium","high"], prompt:"Alterne pequenos blocos de esforço e recuperação sem perder o controle da respiração." },
-  { id:"flow", type:"Flow restaurador", icon:Leaf, intensity:"light", min:10, env:["home","outdoor","anywhere"], targets:["calm","free"], energy:["low","medium"], prompt:"Combine mobilidade, alongamentos ativos e respiração em sequência contínua." },
-  { id:"play", type:"Play circuit", icon:Sparkles, intensity:"moderate", min:10, env:["home","outdoor","anywhere"], targets:["playful","energized","free"], energy:["medium","high"], prompt:"Misture deslocamentos, passos e pequenos desafios para tornar a sessão mais espontânea." }
+  {
+    id:"breath", type:"Respiração guiada", icon:Wind, intensity:"light", min:5,
+    env:["home","gym","outdoor","anywhere"], targets:["calm","focused"], energy:["low","medium","high"],
+    prompt:"Uma pausa ativa para reduzir o ritmo e reorganizar a atenção.",
+    tags:["Garmin-inspired","sem equipamento"],
+    routines:{
+      5:["1 min · respiração natural","3 min · inspire 4s e expire 6s, sem prender o ar","1 min · volte ao ritmo natural e observe o corpo"],
+      10:["2 min · respiração natural","6 min · inspire 4s e expire 6s, de forma confortável","2 min · respiração livre e atenção aos pontos de tensão"],
+      20:["3 min · aterramento e respiração natural","12 min · respiração lenta e confortável","5 min · escaneamento corporal e retorno gradual"],
+      30:["5 min · chegada e postura confortável","15 min · respiração lenta e confortável","10 min · atenção aberta e retorno gradual"]
+    }
+  },
+  {
+    id:"meditation", type:"Meditação guiada", icon:Brain, intensity:"light", min:5,
+    env:["home","outdoor","anywhere"], targets:["calm","focused","free"], energy:["low","medium","high"],
+    prompt:"Sente-se ou deite-se de forma confortável e use a sessão para criar espaço mental.",
+    tags:["Garmin-inspired","baixo atrito"],
+    routines:{
+      5:["1 min · escolha uma intenção simples","3 min · observe respiração, sons e sensações sem corrigir nada","1 min · perceba o que mudou"],
+      10:["2 min · chegada","6 min · atenção na respiração; quando dispersar, volte sem julgamento","2 min · atenção aberta"],
+      20:["3 min · chegada","12 min · foco na respiração e sensações do corpo","5 min · atenção aberta e intenção para o próximo passo"],
+      30:["5 min · chegada","15 min · atenção sustentada","10 min · escaneamento corporal e fechamento"]
+    }
+  },
+  {
+    id:"mobility", type:"Mobilidade", icon:Waves, intensity:"light", min:5,
+    env:["home","gym","outdoor","anywhere"], targets:["calm","free","focused"], energy:["low","medium"],
+    prompt:"Movimentos controlados para ombros, quadris e coluna, sem forçar amplitude.",
+    tags:["Garmin-inspired","sem equipamento"],
+    routines:{
+      5:["40s · círculos de ombro","40s · gato-vaca","40s · rotação torácica","40s · 90/90 de quadril","40s · mobilidade de tornozelo","1m40 · repetir o que mais ajudou"],
+      10:["1 min · ombros e pescoço","2 min · gato-vaca + rotação torácica","2 min · 90/90 de quadril","2 min · agachamento assistido e tornozelo","3 min · flow livre"],
+      20:["4 min · coluna torácica","5 min · quadril","4 min · tornozelos e agachamento assistido","4 min · ombros","3 min · flow leve"],
+      30:["5 min · aquecimento articular","8 min · coluna e ombros","8 min · quadril e tornozelos","6 min · agachamento assistido e deslocamentos","3 min · flow final"]
+    }
+  },
+  {
+    id:"walk", type:"Caminhada consciente", icon:Footprints, intensity:"light", min:10,
+    env:["outdoor","gym","anywhere"], targets:["calm","focused","free","energized"], energy:["low","medium","high"],
+    prompt:"Caminhe num ritmo confortável; se quiser energia, aumente gradualmente o passo.",
+    tags:["Garmin-inspired","baixo impacto"],
+    routines:{
+      5:["1 min · passo fácil","3 min · ritmo confortável","1 min · desacelere"],
+      10:["2 min · passo fácil","6 min · ritmo constante","2 min · desacelere"],
+      20:["4 min · fácil","12 min · ritmo vivo, ainda conversável","4 min · fácil"],
+      30:["5 min · fácil","20 min · ritmo vivo e constante","5 min · desacelere"]
+    }
+  },
+  {
+    id:"dance", type:"Dança livre", icon:Music2, intensity:"moderate", min:5,
+    env:["home","anywhere"], targets:["energized","playful","free"], energy:["low","medium","high"],
+    prompt:"Use uma música que dê vontade de levantar. Não precisa saber dançar: o objetivo é começar.",
+    tags:["música","zero técnica"],
+    routines:{
+      5:["1 música · balance o corpo e marque o ritmo","1 música · aumente os passos e use os braços"],
+      10:["2 min · aquecer com passos simples","6 min · 2 músicas com movimento livre","2 min · diminuir o ritmo"],
+      20:["3 min · aquecimento","14 min · músicas alternando intensidade","3 min · desacelerar"],
+      30:["5 min · aquecimento","20 min · bloco principal dançando","5 min · retorno gradual"]
+    }
+  },
+  {
+    id:"strength", type:"Força essencial", icon:Dumbbell, intensity:"moderate", min:10,
+    env:["home","gym","anywhere"], targets:["strong","focused","energized"], energy:["medium","high"],
+    prompt:"Um circuito de padrões básicos: agachar, empurrar, extensão de quadril, unilateral e core.",
+    tags:["força","peso do corpo"],
+    routines:{
+      5:["40s · sentar e levantar da cadeira","40s · flexão inclinada na parede ou bancada","40s · ponte de glúteos","40s · dead bug","40s · pausa e repetir o exercício preferido"],
+      10:["2 voltas · 8–12 agachamentos para cadeira","2 voltas · 6–12 flexões inclinadas","2 voltas · 10–15 pontes de glúteos","2 voltas · 6–10 avanços reversos por lado","2 voltas · 20–30s prancha ou dead bug"],
+      20:["3 voltas · 8–15 agachamentos","3 voltas · 6–12 flexões adaptadas","3 voltas · 10–15 pontes de glúteos","3 voltas · 8–12 avanços reversos por lado","3 voltas · 20–40s prancha ou dead bug"],
+      30:["5 min · aquecimento dinâmico","4 voltas · 8–15 agachamentos","4 voltas · 6–12 flexões adaptadas","4 voltas · 10–15 pontes de glúteos","4 voltas · 8–12 avanços reversos por lado","4 voltas · 20–40s prancha ou dead bug"]
+    }
+  },
+  {
+    id:"hiit", type:"HIIT acessível", icon:HeartPulse, intensity:"intense", min:10,
+    env:["home","gym","outdoor","anywhere"], targets:["energized","strong","playful"], energy:["medium","high"],
+    prompt:"Intervalos curtos com opção de baixo impacto. Intensidade é ajustável: técnica vem antes da velocidade.",
+    tags:["Garmin-inspired","cardio"],
+    routines:{
+      5:["5 × 30s marcha rápida ou polichinelo baixo impacto + 30s leve"],
+      10:["2 min · aquecer","6 × 30s esforço / 30s leve","2 min · desacelerar"],
+      20:["4 min · aquecer","12 × 30s esforço / 30s leve","4 min · desacelerar"],
+      30:["5 min · aquecer","10 × 45s esforço / 45s leve","5 min · desacelerar"]
+    }
+  },
+  {
+    id:"yoga", type:"Yoga flow", icon:PersonStanding, intensity:"light", min:10,
+    env:["home","outdoor","anywhere"], targets:["calm","focused","free"], energy:["low","medium"],
+    prompt:"Uma sequência fluida, sem buscar posições extremas. Respiração e controle são prioridade.",
+    tags:["Garmin-inspired","mobilidade"],
+    routines:{
+      5:["1 min · respiração","1 min · gato-vaca","1 min · cão olhando para baixo adaptado","1 min · postura da criança","1 min · alongamento em pé"],
+      10:["2 min · respiração + gato-vaca","2 min · mobilidade de quadril","3 min · flow em pé","2 min · postura da criança","1 min · fechamento"],
+      20:["4 min · chegada e mobilidade","10 min · flow suave","4 min · posições no chão","2 min · fechamento"],
+      30:["5 min · chegada","15 min · flow progressivo","7 min · mobilidade no chão","3 min · fechamento"]
+    }
+  },
+  {
+    id:"pilates", type:"Pilates essencial", icon:CircleDot, intensity:"moderate", min:10,
+    env:["home","gym","anywhere"], targets:["focused","strong","free"], energy:["medium","high"],
+    prompt:"Controle, estabilidade e respiração em uma sessão simples de solo.",
+    tags:["Garmin-inspired","core"],
+    routines:{
+      5:["45s · ponte","45s · dead bug","45s · bird dog","45s · clam por lado","1 min · respiração"],
+      10:["2 voltas · 10 pontes","2 voltas · 8 dead bug por lado","2 voltas · 8 bird dog por lado","2 voltas · 10 clam por lado"],
+      20:["3 voltas · ponte","3 voltas · dead bug","3 voltas · bird dog","3 voltas · clam","3 voltas · prancha lateral adaptada"],
+      30:["5 min · mobilidade","4 voltas · ponte, dead bug, bird dog, clam e prancha lateral","5 min · desacelerar"]
+    }
+  },
+  {
+    id:"sleepreset", type:"Desacelerar para dormir", icon:Moon, intensity:"light", min:5,
+    env:["home","anywhere"], targets:["calm","free"], energy:["low","medium"],
+    prompt:"Uma sessão muito leve para quando sua meta é reduzir estímulo, não treinar.",
+    tags:["respiração","relaxamento"],
+    routines:{
+      5:["1 min · soltar ombros","3 min · expiração mais longa que a inspiração, sem esforço","1 min · silêncio"],
+      10:["2 min · mobilidade muito leve","6 min · respiração lenta","2 min · relaxamento corporal"],
+      20:["5 min · mobilidade leve","10 min · respiração e escaneamento corporal","5 min · silêncio"],
+      30:["5 min · mobilidade leve","15 min · respiração e escaneamento corporal","10 min · relaxamento"]
+    }
+  }
 ];
 
-const storageKey = "m2m-history-v2";
+const storageKey = "m2m-history-v3";
 
 function readHistory(){
   try { return JSON.parse(localStorage.getItem(storageKey)) || []; }
@@ -76,37 +195,43 @@ function successScore(entry, movementId, context){
 }
 
 function recommend(context, history){
-  const {current,target,time,energy,environment,intensity} = context;
+  const {current,target,time,energy,environment,intensity,music} = context;
 
   const scored = library.map(item=>{
     let score = 0;
     const reasons = [];
 
-    if(item.targets.includes(target)){ score += 6; reasons.push("combina com o estado que você quer alcançar"); }
-    if(item.energy.includes(energy)){ score += 4; reasons.push("respeita seu nível de energia"); }
-    if(item.env.includes(environment) || environment==="anywhere"){ score += 3; reasons.push("funciona no ambiente escolhido"); }
+    if(item.targets.includes(target)){ score += 7; reasons.push("combina com como você quer se sentir"); }
+    if(item.energy.includes(energy)){ score += 4; reasons.push("respeita sua energia de hoje"); }
+    if(item.env.includes(environment) || environment==="anywhere"){ score += 3; reasons.push("funciona onde você está"); }
     if(item.min <= time){ score += 3; reasons.push("cabe no tempo disponível"); }
     else score -= 5;
 
     if(intensity !== "surprise"){
-      if(item.intensity === intensity){ score += 4; reasons.push("segue sua intensidade preferida"); }
-      else if(intensity==="light" && item.intensity==="intense") score -= 5;
+      if(item.intensity === intensity){ score += 4; reasons.push("segue a intensidade que você escolheu"); }
+      else if(intensity==="light" && item.intensity==="intense") score -= 6;
       else if(intensity==="intense" && item.intensity==="light") score -= 2;
     }
 
-    if((current==="anxious" || current==="stressed") && item.intensity==="light"){
-      score += 2;
-      reasons.push("começa com uma proposta mais reguladora");
-    }
-    if(current==="tired" && item.id==="dance" && target==="energized"){
+    if((current==="anxious" || current==="stressed") && ["breath","meditation","mobility","walk","yoga"].includes(item.id)){
       score += 3;
-      reasons.push("usa música e movimento livre para ativar sem exigir muito");
+      reasons.push("começa com uma opção de menor pressão");
+    }
+
+    if(current==="tired" && target==="energized" && ["dance","walk"].includes(item.id)){
+      score += 4;
+      reasons.push("ajuda a começar com baixa barreira");
+    }
+
+    if(music==="yes" && ["dance","walk","strength","hiit"].includes(item.id)){
+      score += 2;
+      reasons.push("combina bem com estímulo musical");
     }
 
     const learned = history.reduce((sum,h)=>sum+successScore(h,item.id,context),0);
     if(learned>0){
       score += Math.min(learned,8);
-      reasons.push("movimentos parecidos já fizeram você se sentir melhor");
+      reasons.push("sessões parecidas já funcionaram bem para você");
     }
 
     return {...item,score,reasons,learned};
@@ -115,9 +240,22 @@ function recommend(context, history){
   const chosen = scored[0];
   return {
     ...chosen,
-    duration: Math.max(5, Math.min(time, Math.max(chosen.min, Math.min(time,20)))),
-    reasons: chosen.reasons.slice(0,4)
+    duration: time,
+    reasons: chosen.reasons.slice(0,4),
+    routine: chosen.routines[time] || chosen.routines[10]
   };
+}
+
+function musicSearch(target, movement){
+  const vibe = {
+    calm:"calm focus instrumental",
+    focused:"focus flow instrumental",
+    energized:"energy workout upbeat",
+    strong:"strength workout motivation",
+    free:"feel good movement",
+    playful:"dance happy hits"
+  }[target] || "workout motivation";
+  return "https://open.spotify.com/search/" + encodeURIComponent(vibe + " " + movement);
 }
 
 export default function App(){
@@ -128,11 +266,15 @@ export default function App(){
   const [energy,setEnergy] = useState("medium");
   const [environment,setEnvironment] = useState("anywhere");
   const [intensity,setIntensity] = useState("surprise");
+  const [music,setMusic] = useState("yes");
   const [after,setAfter] = useState("");
   const [history,setHistory] = useState(readHistory);
 
-  const context = {current,target,time,energy,environment,intensity};
-  const recommendation = useMemo(()=>recommend(context,history),[current,target,time,energy,environment,intensity,history]);
+  const context = {current,target,time,energy,environment,intensity,music};
+  const recommendation = useMemo(
+    ()=>recommend(context,history),
+    [current,target,time,energy,environment,intensity,music,history]
+  );
 
   const saveSession = value => {
     setAfter(value);
@@ -140,6 +282,7 @@ export default function App(){
       id: Date.now(),
       date: new Date().toISOString(),
       ...context,
+      duration: recommendation.duration,
       movementId: recommendation.id,
       movement: recommendation.type,
       after:value
@@ -151,82 +294,119 @@ export default function App(){
     });
   };
 
-  const reset = () => {
-    setStep(1);
-    setAfter("");
-  };
+  const reset = () => { setStep(1); setAfter(""); };
 
   if(step===0) return <main className="app landing">
-    <div className="badge">MOOD → MOVEMENT</div>
+    <header className="landingHeader">
+      <div className="badge">MOOD → MOVEMENT</div>
+      <button className="historyMini" onClick={()=>setStep(11)}><History size={15}/> Meu histórico</button>
+    </header>
+
     <section className="hero">
-      <p className="kicker">FEEL → CHOOSE → MOVE → LEARN</p>
-      <h1>Movimento que começa em como você está hoje.</h1>
-      <p className="lead">Conte seu humor, energia, ambiente e preferência. O app combina esses sinais com seu histórico para sugerir um movimento simples e progressivamente mais pessoal.</p>
-      <button className="primary" onClick={()=>setStep(1)}>Começar <ArrowRight size={18}/></button>
+      <div className="heroVisual" aria-hidden="true">
+        <div className="orb orbOne">🎧</div>
+        <div className="orb orbTwo">🌿</div>
+        <div className="orb orbThree">⚡</div>
+        <div className="pulseRing"></div>
+      </div>
+      <p className="kicker">NÃO É SOBRE TREINAR MAIS. É SOBRE CONSEGUIR COMEÇAR.</p>
+      <h1>Quando falta vontade, o app escolhe um primeiro movimento por você.</h1>
+      <p className="lead">Diga como você está, como quer se sentir e quanto tempo tem. O Mood → Movement combina movimento, respiração, meditação e música para criar uma sessão pequena o bastante para começar agora.</p>
+      <div className="heroCtas">
+        <button className="primary" onClick={()=>setStep(1)}>Encontrar meu movimento <ArrowRight size={18}/></button>
+        <span>Leva menos de 1 minuto para escolher.</span>
+      </div>
+      <div className="promiseGrid">
+        <div><span>01</span><b>Você conta o momento</b><p>Humor, energia, lugar e tempo.</p></div>
+        <div><span>02</span><b>O app reduz a decisão</b><p>Uma recomendação concreta, não uma lista infinita.</p></div>
+        <div><span>03</span><b>Você testa e ensina</b><p>Seu feedback melhora as próximas sugestões.</p></div>
+      </div>
     </section>
-    <p className="note">Protótipo de bem-estar. Não substitui avaliação médica, diagnóstico ou orientação profissional.</p>
+
+    <section className="visualBand">
+      <div><Wind/><span>Respirar</span></div><div><Brain/><span>Meditar</span></div>
+      <div><Footprints/><span>Caminhar</span></div><div><Dumbbell/><span>Fortalecer</span></div>
+      <div><Music2/><span>Dançar</span></div><div><Waves/><span>Mobilizar</span></div>
+    </section>
+    <p className="note">Ferramenta de bem-estar e apoio à decisão. Não substitui avaliação médica, diagnóstico, tratamento ou orientação profissional.</p>
   </main>;
 
-  if(step===7) return <main className="app">
+  if(step===8) return <main className="app">
     <Header onHome={()=>setStep(0)}/>
     <section className="screen result">
-      <p className="kicker">SUGESTÃO PARA AGORA</p>
+      <p className="kicker">SEU PRÓXIMO PASSO</p>
       <h2>{recommendation.type}</h2>
       <RecommendationCard recommendation={recommendation}/>
       <div className="why">
-        <b>Por que essa sugestão?</b>
+        <b>Por que isso apareceu para você?</b>
         <ul>{recommendation.reasons.map((r,i)=><li key={i}>{r}</li>)}</ul>
-        <p className="learning">{recommendation.learned>0 ? "A personalização já está usando seu histórico." : "Ainda estamos aprendendo com você. Seu feedback após a sessão vai melhorar as próximas sugestões."}</p>
+        <p className="learning">{recommendation.learned>0 ? "Seu histórico já está influenciando esta escolha." : "Esta é uma recomendação inicial. Depois da sessão, diga como você ficou para o app aprender com você."}</p>
       </div>
-      <button className="primary full" onClick={()=>setStep(8)}><Play size={18}/> Iniciar sessão</button>
+      <div className="resultActions">
+        <button className="primary full" onClick={()=>setStep(9)}><Play size={18}/> Começar agora</button>
+        <button className="secondary full" onClick={()=>setStep(7)}><ArrowLeft size={18}/> Ajustar escolhas</button>
+      </div>
     </section>
   </main>;
 
-  if(step===8) {
+  if(step===9) {
     const Icon=recommendation.icon;
     return <main className="app"><Header onHome={()=>setStep(0)}/>
       <section className="screen session">
-        <div className="sessionIcon"><Icon size={30}/></div>
-        <p className="kicker">MOVIMENTO DE HOJE</p>
-        <h2>{recommendation.type}</h2>
-        <div className="sessionTime"><Clock3 size={20}/><b>{recommendation.duration} min</b></div>
-        <p className="sessionPrompt">{recommendation.prompt}</p>
-        <div className="sessionSteps">
-          <span>01 <b>Comece abaixo do seu limite</b></span>
-          <span>02 <b>Encontre um ritmo sustentável</b></span>
-          <span>03 <b>Interrompa se sentir dor, tontura ou mal-estar</b></span>
-          <span>04 <b>Finalize percebendo como você está</b></span>
+        <div className="sessionHero">
+          <div className="sessionIcon"><Icon size={30}/></div>
+          <div>
+            <p className="kicker">SESSÃO DE AGORA</p>
+            <h2>{recommendation.type}</h2>
+          </div>
+          <div className="sessionTime"><Clock3 size={19}/><b>{recommendation.duration} min</b></div>
         </div>
-        <button className="primary full" onClick={()=>setStep(9)}><Check size={18}/> Concluir</button>
+
+        <p className="sessionPrompt">{recommendation.prompt}</p>
+
+        {music !== "no" && <a className="musicCard" href={musicSearch(target,recommendation.type)} target="_blank" rel="noreferrer">
+          <div className="musicIcon"><Music2 size={24}/></div>
+          <div><span>TRILHA PARA COMEÇAR</span><b>Abrir música no Spotify</b><p>Uma busca pronta com a energia desta sessão. Você escolhe a faixa.</p></div>
+          <ExternalLink size={18}/>
+        </a>}
+
+        <div className="routine">
+          <div className="routineHeader"><b>Seu roteiro</b><span>Sem perfeição. Apenas siga o próximo bloco.</span></div>
+          {recommendation.routine.map((item,i)=><div className="routineStep" key={i}><span>{String(i+1).padStart(2,"0")}</span><b>{item}</b></div>)}
+        </div>
+
+        <div className="safetyBox"><HeartPulse size={18}/><span>Adapte amplitude e ritmo. Pare se houver dor, tontura, falta de ar incomum ou mal-estar.</span></div>
+        <button className="primary full" onClick={()=>setStep(10)}><Check size={18}/> Terminei</button>
       </section>
     </main>;
   }
 
-  if(step===9) return <main className="app"><Header onHome={()=>setStep(0)}/>
+  if(step===10) return <main className="app"><Header onHome={()=>setStep(0)}/>
     <section className="screen feedback">
-      <p className="kicker">DEPOIS DO MOVIMENTO</p>
+      <p className="kicker">CHECK-OUT</p>
       <h2>Como você se sente agora?</h2>
+      <p className="subcopy">Não existe resposta certa. Isso serve para o app descobrir o que funciona melhor para você.</p>
       <div className="feedbackGrid">
         {[["better","😊","Melhor"],["same","😐","Igual"],["worse","😕","Pior"]].map(([v,e,l])=>
           <button key={v} className={after===v?"selected":""} onClick={()=>saveSession(v)}><span>{e}</span><b>{l}</b></button>
         )}
       </div>
-      {after ? <div className="saved"><Check size={18}/> Feedback salvo. Isso ajuda a personalizar as próximas recomendações.</div> : null}
-      <button className="secondary" onClick={reset}><RotateCcw size={18}/> Fazer outra</button>
+      {after ? <div className="saved"><Check size={18}/> Feedback salvo. A próxima recomendação pode usar esse padrão.</div> : null}
+      <button className="secondary" onClick={reset}><RotateCcw size={18}/> Fazer outra sessão</button>
     </section>
   </main>;
 
-  if(step===10) return <main className="app"><Header onHome={()=>setStep(0)}/>
+  if(step===11) return <main className="app"><Header onHome={()=>setStep(0)}/>
     <section className="screen">
-      <p className="kicker">SEU PADRÃO</p>
+      <p className="kicker">O QUE FUNCIONA PARA VOCÊ</p>
       <h2>Histórico</h2>
       <Stats history={history}/>
-      {history.length===0 ? <div className="empty">Nenhuma sessão concluída ainda.</div> :
+      {history.length===0 ? <div className="empty">Você ainda não concluiu nenhuma sessão. Faça a primeira e volte aqui para enxergar seus padrões.</div> :
         <div className="history">
           {history.map(item=><article key={item.id}>
             <div>
-              <b>{item.movement} · {item.time} min</b>
-              <span>{new Date(item.date).toLocaleDateString("pt-BR")} · {labelOf(targetMoods,item.target)}</span>
+              <b>{item.movement} · {item.duration || item.time} min</b>
+              <span>{new Date(item.date).toLocaleDateString("pt-BR")} · queria ficar {labelOf(targetMoods,item.target).toLowerCase()}</span>
             </div>
             <div className="miniMood">{item.after==="better"?"😊":item.after==="same"?"😐":"😕"}</div>
           </article>)}
@@ -236,49 +416,55 @@ export default function App(){
 
   const screens = [
     null,
-    {title:"Como você está agora?", content:<MoodGrid items={currentMoods} value={current} onPick={setCurrent}/>},
-    {title:"Como está sua energia?", content:<MoodGrid items={energies} value={energy} onPick={setEnergy}/>},
-    {title:"Como você gostaria de se sentir?", content:<MoodGrid items={targetMoods} value={target} onPick={setTarget}/>},
-    {title:"Onde você vai se mover?", content:<IconGrid items={environments} value={environment} onPick={setEnvironment}/>},
-    {title:"Qual intensidade parece melhor hoje?", content:<ChoiceGrid items={intensities} value={intensity} onPick={setIntensity}/>},
-    {title:"Quanto tempo você tem?", content:<TimeGrid value={time} onPick={setTime}/>}
+    {eyebrow:"COMEÇAMOS POR VOCÊ", title:"Como você está agora?", note:"Escolha a opção que mais se aproxima. Não precisa ser exata.", content:<MoodGrid items={currentMoods} value={current} onPick={setCurrent}/>},
+    {eyebrow:"ENERGIA", title:"Quanto combustível você sente que tem?", note:"Isso evita que o app sugira uma sessão maior do que o momento pede.", content:<MoodGrid items={energies} value={energy} onPick={setEnergy}/>},
+    {eyebrow:"INTENÇÃO", title:"Como você gostaria de terminar?", note:"O objetivo não é prometer mudar seu humor; é escolher um tipo de movimento coerente com sua intenção.", content:<MoodGrid items={targetMoods} value={target} onPick={setTarget}/>},
+    {eyebrow:"CONTEXTO", title:"Onde você consegue se mover?", note:"Sem equipamento também conta.", content:<IconGrid items={environments} value={environment} onPick={setEnvironment}/>},
+    {eyebrow:"ESFORÇO", title:"Qual intensidade parece possível hoje?", note:"Você sempre pode fazer menos durante a sessão.", content:<ChoiceGrid items={intensities} value={intensity} onPick={setIntensity}/>},
+    {eyebrow:"ESTÍMULO", title:"A música ajuda você a começar?", note:"Sem login no Spotify. Se quiser, abrimos uma busca pronta para a sessão.", content:<MoodGrid items={musicPrefs} value={music} onPick={setMusic}/>},
+    {eyebrow:"TEMPO REAL", title:"Quanto tempo você tem de verdade?", note:"O app monta a sessão dentro desse limite.", content:<TimeGrid value={time} onPick={setTime}/>}
   ];
 
   const s=screens[step];
-  const progress=Math.round((step/6)*100);
+  const progress=Math.round((step/7)*100);
 
   return <main className="app">
     <Header onHome={()=>setStep(0)}/>
-    <section className="screen">
+    <section className="screen questionnaire">
       <div className="progress"><span style={{width:progress+"%"}}/></div>
-      <p className="step">0{step} / 06</p>
+      <div className="questionMeta"><p className="step">0{step} / 07</p><span>{s.eyebrow}</span></div>
       <h2>{s.title}</h2>
+      <p className="questionNote">{s.note}</p>
       {s.content}
       <div className="actions">
         <button className="back" onClick={()=>setStep(step-1)} aria-label="Voltar"><ArrowLeft size={18}/></button>
-        <button className="primary" onClick={()=>setStep(step===6?7:step+1)}>{step===6?"Ver sugestão":"Continuar"} <ArrowRight size={18}/></button>
+        <button className="primary" onClick={()=>setStep(step===7?8:step+1)}>{step===7?"Criar minha sessão":"Continuar"} <ArrowRight size={18}/></button>
       </div>
-      <button className="historyLink" onClick={()=>setStep(10)}><History size={16}/> Ver histórico</button>
+      <button className="historyLink" onClick={()=>setStep(11)}><History size={16}/> Ver o que já funcionou</button>
     </section>
   </main>;
 }
 
 function Header({onHome}){ return <header><button className="wordmark" onClick={onHome}>MOOD <span>→</span> MOVEMENT</button></header>; }
 
-function MoodGrid({items,value,onPick}){ return <div className="moodGrid">{items.map(i=><button key={i.id} className={value===i.id?"selected":""} onClick={()=>onPick(i.id)}><span>{i.emoji}</span><b>{i.label}</b></button>)}</div>; }
+function MoodGrid({items,value,onPick}){ return <div className="moodGrid">{items.map(i=><button key={i.id} className={value===i.id?"selected":""} onClick={()=>onPick(i.id)}><span>{i.emoji}</span><div><b>{i.label}</b>{i.hint&&<small>{i.hint}</small>}</div></button>)}</div>; }
 
-function IconGrid({items,value,onPick}){ return <div className="moodGrid">{items.map(i=>{const Icon=i.icon;return <button key={i.id} className={value===i.id?"selected":""} onClick={()=>onPick(i.id)}><Icon size={27}/><b>{i.label}</b></button>})}</div>; }
+function IconGrid({items,value,onPick}){ return <div className="moodGrid">{items.map(i=>{const Icon=i.icon;return <button key={i.id} className={value===i.id?"selected":""} onClick={()=>onPick(i.id)}><span className="iconBubble"><Icon size={24}/></span><div><b>{i.label}</b><small>Escolher</small></div></button>})}</div>; }
 
-function ChoiceGrid({items,value,onPick}){ return <div className="choiceGrid">{items.map(i=><button key={i.id} className={value===i.id?"selected":""} onClick={()=>onPick(i.id)}><b>{i.label}</b></button>)}</div>; }
+function ChoiceGrid({items,value,onPick}){ return <div className="choiceGrid">{items.map(i=><button key={i.id} className={value===i.id?"selected":""} onClick={()=>onPick(i.id)}><b>{i.label}</b><small>{i.hint}</small></button>)}</div>; }
 
 function TimeGrid({value,onPick}){ return <div className="timeGrid">{times.map(v=><button key={v} className={value===v?"selected":""} onClick={()=>onPick(v)}><Clock3 size={20}/><b>{v}</b><span>min</span></button>)}</div>; }
 
 function RecommendationCard({recommendation}){
   const Icon=recommendation.icon;
   return <div className="recommendation">
-    <div className="recIcon"><Icon size={28}/></div>
-    <div><span>{recommendation.intensity==="light"?"Leve":recommendation.intensity==="moderate"?"Moderada":"Intensa"}</span><b>{recommendation.duration} minutos</b><p>{recommendation.prompt}</p></div>
-    <Zap size={18}/>
+    <div className="recTop">
+      <div className="recIcon"><Icon size={28}/></div>
+      <div className="recMeta"><span>{recommendation.intensity==="light"?"Leve":recommendation.intensity==="moderate"?"Moderada":"Intensa"}</span><b>{recommendation.duration} minutos</b></div>
+      <Zap size={18}/>
+    </div>
+    <p>{recommendation.prompt}</p>
+    <div className="tags">{recommendation.tags.map(tag=><span key={tag}>{tag}</span>)}</div>
   </div>;
 }
 
@@ -290,8 +476,8 @@ function Stats({history}){
   history.filter(x=>x.after==="better").forEach(x=>counts[x.movement]=(counts[x.movement]||0)+1);
   const favorite=Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0]||"—";
   return <div className="stats">
-    <div><span>Sessões</span><b>{completed}</b></div>
+    <div><span>Sessões concluídas</span><b>{completed}</b></div>
     <div><span>Terminou melhor</span><b>{rate}%</b></div>
-    <div><span>Melhor padrão</span><b>{favorite}</b></div>
+    <div><span>Seu melhor padrão</span><b>{favorite}</b></div>
   </div>;
 }
