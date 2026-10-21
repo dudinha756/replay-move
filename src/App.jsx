@@ -262,6 +262,15 @@ export default function App(){
 
   const reset=()=>{setStep(1);setAfter("");setSaveError("")};
 
+  const connectGarmin=async()=>{
+    try{
+      const data=await apiFetch("/api/garmin/connect",{method:"POST",body:"{}"});
+      window.location.assign(data.url);
+    }catch(error){
+      setGarmin(prev=>({...prev,error:error.message||"A integração Garmin ainda não está disponível."}));
+    }
+  };
+
   if(sessionLoading)return <main className="app authShell"><div className="authCard"><p className="kicker">MOOD → MOVEMENT</p><h2>Carregando seu espaço...</h2></div></main>;
 
   if(!user)return <main className="app authShell"><section className="authCard">
@@ -361,9 +370,9 @@ export default function App(){
       <div><span>DADOS PREVISTOS</span><b>Atividade · FC · calorias</b></div>
     </div>
     {garmin.connected?<div className="garminConnected"><Check size={18}/> Sua conta Garmin está conectada.</div>:garmin.configured?
-      <button className="garminButton full" onClick={()=>window.location.assign("/api/garmin/connect")}><Watch size={18}/> Conectar Garmin</button>:
+      <button className="garminButton full" onClick={connectGarmin}><Watch size={18}/> Conectar Garmin</button>:
       <div className="garminPending"><Activity size={20}/><div><b>O app já está preparado para a integração.</b><p>A ativação real depende de aprovação e credenciais do Garmin Connect Developer Program. Até lá, o restante do app funciona normalmente.</p></div></div>}
-    <a className="garminLearn" href="https://developer.garmin.com/gc-developer-program/" target="_blank" rel="noreferrer">Sobre o programa oficial Garmin <ExternalLink size={15}/></a>
+    {garmin.error&&<div className="authError">{garmin.error}</div>}<a className="garminLearn" href="https://developer.garmin.com/gc-developer-program/" target="_blank" rel="noreferrer">Sobre o programa oficial Garmin <ExternalLink size={15}/></a>
   </section></main>;
 
   const screens=[
