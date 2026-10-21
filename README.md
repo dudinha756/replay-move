@@ -55,3 +55,23 @@ npm run dev
 ```bash
 npm run build
 ```
+
+
+## Sessões longas e musculação
+
+O seletor de tempo agora aceita 5, 10, 20, 30, 45, 60, 90 e 120 minutos.
+
+A biblioteca inclui, além das práticas curtas:
+- treino de academia para glúteos e posteriores;
+- treino de ombro, tríceps e peito;
+- treino de quadríceps e glúteos;
+- treino de costas e bíceps;
+- cardio endurance de 45–120 min;
+- cardio intervalado avançado;
+- HIIT, corrida/caminhada, força, mobilidade, Pilates, yoga, respiração e meditação.
+
+Os modelos de musculação diferenciam sessões de 60, 90 e 120 minutos e priorizam padrões multiarticulares antes de exercícios acessórios quando apropriado. Sessões longas não são automaticamente tratadas como mais intensas.
+
+## Spotify
+
+No MVP atual, música continua sendo um gatilho opcional: o app abre uma busca coerente no Spotify sem exigir login externo. A criação automática de playlists na conta do usuário fica para uma fase futura porque a Web API do Spotify exige OAuth e autorização do usuário.
