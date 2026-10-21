@@ -107,7 +107,7 @@ function recommend(context, history){
   const chosen = scored[0];
   return {
     ...chosen,
-    duration: Math.max(5, Math.min(time, Math.max(chosen.min, Math.min(time,20)))),
+    duration: time,
     reasons: chosen.reasons.slice(0,4)
   };
 }
@@ -132,6 +132,11 @@ export default function App(){
   const [history,setHistory] = useState([]);
   const [historyLoading,setHistoryLoading] = useState(false);
   const [saveError,setSaveError] = useState("");
+  const [spotifyStatus,setSpotifyStatus] = useState({configured:false,connected:false,displayName:null});
+  const [spotifyLoading,setSpotifyLoading] = useState(false);
+  const [spotifyError,setSpotifyError] = useState("");
+  const [playlistResult,setPlaylistResult] = useState(null);
+  const [musicDiscovery,setMusicDiscovery] = useState("balanced");
 
   useEffect(()=>{
     authClient.getSession().then(result=>{
@@ -141,13 +146,61 @@ export default function App(){
   },[]);
 
   useEffect(()=>{
-    if(!user) { setHistory([]); return; }
+    if(!user) {
+      setHistory([]);
+      setSpotifyStatus({configured:false,connected:false,displayName:null});
+      return;
+    }
     setHistoryLoading(true);
     apiFetch("/api/sessions")
       .then(data=>setHistory(data.sessions || []))
       .catch(()=>setHistory([]))
       .finally(()=>setHistoryLoading(false));
+
+    apiFetch("/api/spotify/status")
+      .then(setSpotifyStatus)
+      .catch(()=>setSpotifyStatus({configured:false,connected:false,displayName:null}));
+
+    const params=new URLSearchParams(window.location.search);
+    if(params.get("spotify")){
+      window.history.replaceState({}, "", window.location.pathname);
+    }
   },[user]);
+
+  const connectSpotify = async () => {
+    setSpotifyLoading(true);
+    setSpotifyError("");
+    try {
+      const data=await apiFetch("/api/spotify/connect",{method:"POST",body:"{}"});
+      window.location.assign(data.url);
+    } catch(error) {
+      setSpotifyError(error.message || "Não foi possível conectar ao Spotify.");
+      setSpotifyLoading(false);
+    }
+  };
+
+  const createSpotifyPlaylist = async () => {
+    setSpotifyLoading(true);
+    setSpotifyError("");
+    setPlaylistResult(null);
+    try {
+      const data=await apiFetch("/api/spotify/generate",{
+        method:"POST",
+        body:JSON.stringify({
+          activity:recommendation.type,
+          targetMood:labelOf(targetMoods,target),
+          intensity:recommendation.intensity,
+          durationMinutes:recommendation.duration,
+          discovery:musicDiscovery
+        })
+      });
+      setPlaylistResult(data.playlist);
+    } catch(error) {
+      setSpotifyError(error.message || "Não foi possível criar a playlist.");
+    } finally {
+      setSpotifyLoading(false);
+    }
+  };
 
   const context = {current,target,time,energy,environment,intensity};
   const recommendation = useMemo(()=>recommend(context,history),[current,target,time,energy,environment,intensity,history]);
@@ -250,6 +303,17 @@ export default function App(){
         <ul>{recommendation.reasons.map((r,i)=><li key={i}>{r}</li>)}</ul>
         <p className="learning">{recommendation.learned>0 ? "A personalização já está usando seu histórico." : "Ainda estamos aprendendo com você. Seu feedback após a sessão vai melhorar as próximas sugestões."}</p>
       </div>
+      <SpotifyPlaylistCard
+        status={spotifyStatus}
+        loading={spotifyLoading}
+        error={spotifyError}
+        result={playlistResult}
+        discovery={musicDiscovery}
+        setDiscovery={setMusicDiscovery}
+        onConnect={connectSpotify}
+        onGenerate={createSpotifyPlaylist}
+        duration={recommendation.duration}
+      />
       <button className="primary full" onClick={()=>setStep(8)}><Play size={18}/> Iniciar sessão</button>
     </section>
   </main>;
@@ -364,4 +428,42 @@ function Stats({history}){
     <div><span>Terminou melhor</span><b>{rate}%</b></div>
     <div><span>Melhor padrão</span><b>{favorite}</b></div>
   </div>;
+}
+
+
+function SpotifyPlaylistCard({status,loading,error,result,discovery,setDiscovery,onConnect,onGenerate,duration}){
+  return <section className="spotifyCard">
+    <div className="spotifyHead">
+      <div className="spotifyIcon"><Music2 size={22}/></div>
+      <div>
+        <span>TRILHA PERSONALIZADA</span>
+        <b>Spotify para esta sessão</b>
+      </div>
+    </div>
+
+    {!status.configured ? <>
+      <p>O recurso está preparado, mas a conexão do aplicativo com o Spotify ainda precisa ser ativada pelo administrador.</p>
+      <button className="secondary full" disabled>Spotify aguardando configuração</button>
+    </> : !status.connected ? <>
+      <p>Conecte sua conta para o Mood → Movement analisar, com sua autorização, seus artistas e faixas mais ouvidos e criar uma playlist privada de aproximadamente {duration} minutos.</p>
+      <button className="spotifyButton full" onClick={onConnect} disabled={loading}>{loading?"Conectando...":"Conectar Spotify"}</button>
+      <small>Você poderá revogar o acesso depois. O app não recebe sua senha do Spotify.</small>
+    </> : <>
+      <div className="spotifyConnected"><Check size={15}/> Spotify conectado{status.displayName ? ` · ${status.displayName}` : ""}</div>
+      <p>Quanto você quer que a playlist fique perto do que já costuma ouvir?</p>
+      <div className="musicModes">
+        {[
+          ["familiar","Mais familiar"],
+          ["balanced","Equilíbrio"],
+          ["discover","Mais descoberta"]
+        ].map(([value,label])=><button key={value} className={discovery===value?"active":""} onClick={()=>setDiscovery(value)}>{label}</button>)}
+      </div>
+      <button className="spotifyButton full" onClick={onGenerate} disabled={loading}>{loading?"Montando com seus gostos...":"Criar minha playlist"}</button>
+      {result ? <div className="playlistReady">
+        <div><b>{result.name}</b><span>{result.trackCount} faixas · ~{result.durationMinutes} min</span></div>
+        <a href={result.url} target="_blank" rel="noreferrer">Abrir no Spotify</a>
+      </div> : null}
+    </>}
+    {error ? <div className="authError">{error}</div> : null}
+  </section>;
 }
