@@ -1,18 +1,42 @@
-# RE:PLAY Move
+# Mood → Movement
 
-MVP focused on one hypothesis: movement can become easier to repeat when the experience starts with how a person feels and how they want to feel.
+Mood → Movement is a focused wellness MVP built around one simple interaction:
 
-## Current scope
-- bilingual PT/EN
-- mood-to-movement session builder
-- local user profile
-- completed-session history
-- progressive recommendations from real usage patterns
-- Spotify / YouTube Music handoff
-- optional personal playlist
-- post-session feeling feedback
-- responsive mobile-first UI
+**How do you feel now? → How do you want to feel? → How much time do you have?**
 
-Food, calorie targets, diagnosis and treatment are intentionally outside this MVP.
+The app then suggests a short movement session for that moment.
 
-Profile and history currently use localStorage. Authentication and database persistence are a later stage after behavioral validation.
+## MVP scope
+
+- current mood selection
+- desired feeling selection
+- available time selection
+- transparent rule-based movement recommendation
+- short session flow
+- post-session emotional feedback
+- local session history
+
+## Product principle
+
+This is not a workout library and not a calorie tracker. The core job is to reduce the friction of deciding **what kind of movement makes sense right now**.
+
+## Current recommendation logic
+
+The first version uses explicit rules, not AI. That makes behavior easy to test and easy to explain before introducing more complex personalization.
+
+## Safety
+
+Mood → Movement is a wellness prototype and does not provide diagnosis, treatment, rehabilitation or medical advice.
+
+## Run locally
+
+```bash
+npm install
+npm run dev
+```
+
+## Build
+
+```bash
+npm run build
+```
