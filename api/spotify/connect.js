@@ -4,7 +4,6 @@ import { createSpotifyState, spotifyConfigured } from "../../server/spotify.js";
 const scopes = [
   "user-top-read",
   "user-library-read",
-  "user-read-private",
   "playlist-modify-private"
 ];
 
