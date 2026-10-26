@@ -49,6 +49,13 @@ const musicPrefs = [
   {id:"no",label:"Sem música",emoji:"🤍",hint:"Prefiro silêncio"}
 ];
 
+const goals = [
+  {id:"performance",label:"Energia e desempenho",emoji:"⚡",hint:"Quero render melhor na sessão"},
+  {id:"muscle",label:"Ganho de massa",emoji:"💪",hint:"Quero apoiar hipertrofia e recuperação"},
+  {id:"definition",label:"Definição",emoji:"🔥",hint:"Quero preservar desempenho com controle de ingestão"},
+  {id:"maintenance",label:"Saúde e manutenção",emoji:"🌱",hint:"Quero consistência e equilíbrio"}
+];
+
 const times = [5,10,20,30,45,60,90,120];
 
 const library = [
@@ -318,6 +325,56 @@ function recommend(context, history){
   };
 }
 
+
+function nutritionGuide(recommendation, goal){
+  const long = recommendation.duration >= 60;
+  const veryLong = recommendation.duration >= 90;
+  const hard = recommendation.intensity === "intense";
+  const strengthLike = ["strength","gym_glutes_posterior","gym_shoulders_push","gym_quads_glutes","gym_back_biceps"].includes(recommendation.id);
+  const cardioLike = ["hiit","interval_cardio","endurance_cardio","walk","dance"].includes(recommendation.id);
+
+  const dayBefore = veryLong || hard
+    ? "No dia anterior, priorize refeições normais e regulares, com boa hidratação e uma fonte de carboidrato em refeições principais. Não é necessário 'carregar' comida para sessões curtas."
+    : "No dia anterior, mantenha sua alimentação habitual, hidratação e sono. Evite mudanças bruscas ou refeições muito pesadas se isso costuma atrapalhar seu treino.";
+
+  let pre = "Se a última refeição foi há várias horas, escolha algo leve e fácil de digerir.";
+  if(strengthLike || hard || long){
+    pre = "Entre 1 e 3 horas antes, priorize carboidrato de fácil digestão + uma fonte moderada de proteína, com pouca gordura e pouca fibra se você costuma ter desconforto.";
+  }
+  if(recommendation.duration <= 20 && recommendation.intensity === "light"){
+    pre = "Para uma sessão curta e leve, você não precisa comer só por causa do treino se estiver se sentindo bem. Água costuma ser suficiente.";
+  }
+
+  let examples = [];
+  if(goal==="muscle"){
+    examples = ["iogurte + banana + aveia","pão/tapioca + ovos","arroz + frango/feijão em refeição maior"];
+  }else if(goal==="definition"){
+    examples = ["banana + iogurte","pão integral + queijo/ovo","fruta + leite/iogurte"];
+  }else{
+    examples = ["banana + aveia","pão/tapioca + ovo ou queijo","iogurte + fruta"];
+  }
+
+  const during = veryLong
+    ? "Em sessões próximas de 90–120 min, principalmente aeróbicas, água é essencial; carboidrato durante o exercício pode ser útil para quem já tolera esse tipo de estratégia. Para treinos comuns, água normalmente basta."
+    : "Durante a sessão, hidrate-se conforme sede e ambiente. Para sessões curtas, não há necessidade de comer durante.";
+
+  const after = strengthLike
+    ? "Depois, faça uma refeição com proteína + carboidrato e volte ao padrão normal do dia. Para ganho de massa, o total diário de energia e proteína importa mais do que um alimento específico logo após o treino."
+    : cardioLike
+      ? "Depois, reidrate-se e faça uma refeição equilibrada com carboidrato + proteína, principalmente se o treino foi longo ou intenso."
+      : "Depois, volte à alimentação habitual. Sessões leves de mobilidade, respiração ou meditação não exigem uma refeição especial.";
+
+  const goalNote = goal==="muscle"
+    ? "Ganho de massa depende de treino progressivo, ingestão adequada de energia e proteína ao longo do dia."
+    : goal==="definition"
+      ? "Definição depende principalmente do balanço energético ao longo do tempo. Não vale a pena cortar tanto a comida pré-treino a ponto de piorar seu desempenho."
+      : goal==="performance"
+        ? "Para desempenho, chegar alimentado e hidratado tende a ser mais importante do que buscar um alimento 'perfeito'."
+        : "Para saúde e manutenção, consistência e variedade alimentar são prioridades.";
+
+  return {dayBefore,pre,examples,during,after,goalNote};
+}
+
 function musicSearch(target, movement){
   const vibe = {
     calm:"calm focus instrumental",
@@ -339,13 +396,14 @@ export default function App(){
   const [environment,setEnvironment] = useState("anywhere");
   const [intensity,setIntensity] = useState("surprise");
   const [music,setMusic] = useState("yes");
+  const [goal,setGoal] = useState("performance");
   const [after,setAfter] = useState("");
   const [history,setHistory] = useState(readHistory);
 
-  const context = {current,target,time,energy,environment,intensity,music};
+  const context = {current,target,time,energy,environment,intensity,music,goal};
   const recommendation = useMemo(
     ()=>recommend(context,history),
-    [current,target,time,energy,environment,intensity,music,history]
+    [current,target,time,energy,environment,intensity,music,goal,history]
   );
 
   const saveSession = value => {
@@ -372,7 +430,7 @@ export default function App(){
   if(step===0) return <main className="app landing">
     <header className="landingHeader">
       <div className="badge">MOOD → MOVEMENT</div>
-      <button className="historyMini" onClick={()=>setStep(11)}><History size={15}/> Meu histórico</button>
+      <button className="historyMini" onClick={()=>setStep(12)}><History size={15}/> Meu histórico</button>
     </header>
 
     <section className="hero">
@@ -404,7 +462,7 @@ export default function App(){
     <p className="note">Ferramenta de bem-estar e apoio à decisão. Não substitui avaliação médica, diagnóstico, tratamento ou orientação profissional.</p>
   </main>;
 
-  if(step===8) return <main className="app">
+  if(step===9) return <main className="app">
     <Header onHome={()=>setStep(0)}/>
     <section className="screen result">
       <p className="kicker">SEU PRÓXIMO PASSO</p>
@@ -415,14 +473,16 @@ export default function App(){
         <ul>{recommendation.reasons.map((r,i)=><li key={i}>{r}</li>)}</ul>
         <p className="learning">{recommendation.learned>0 ? "Seu histórico já está influenciando esta escolha." : "Esta é uma recomendação inicial. Depois da sessão, diga como você ficou para o app aprender com você."}</p>
       </div>
+      <NutritionCard recommendation={recommendation} goal={goal}/>
+
       <div className="resultActions">
-        <button className="primary full" onClick={()=>setStep(9)}><Play size={18}/> Começar agora</button>
-        <button className="secondary full" onClick={()=>setStep(7)}><ArrowLeft size={18}/> Ajustar escolhas</button>
+        <button className="primary full" onClick={()=>setStep(10)}><Play size={18}/> Começar agora</button>
+        <button className="secondary full" onClick={()=>setStep(8)}><ArrowLeft size={18}/> Ajustar escolhas</button>
       </div>
     </section>
   </main>;
 
-  if(step===9) {
+  if(step===10) {
     const Icon=recommendation.icon;
     return <main className="app"><Header onHome={()=>setStep(0)}/>
       <section className="screen session">
@@ -449,12 +509,12 @@ export default function App(){
         </div>
 
         <div className="safetyBox"><HeartPulse size={18}/><span>Adapte amplitude e ritmo. Pare se houver dor, tontura, falta de ar incomum ou mal-estar.</span></div>
-        <button className="primary full" onClick={()=>setStep(10)}><Check size={18}/> Terminei</button>
+        <button className="primary full" onClick={()=>setStep(12)}><Check size={18}/> Terminei</button>
       </section>
     </main>;
   }
 
-  if(step===10) return <main className="app"><Header onHome={()=>setStep(0)}/>
+  if(step===12) return <main className="app"><Header onHome={()=>setStep(0)}/>
     <section className="screen feedback">
       <p className="kicker">CHECK-OUT</p>
       <h2>Como você se sente agora?</h2>
@@ -494,25 +554,26 @@ export default function App(){
     {eyebrow:"CONTEXTO", title:"Onde você consegue se mover?", note:"Sem equipamento também conta.", content:<IconGrid items={environments} value={environment} onPick={setEnvironment}/>},
     {eyebrow:"ESFORÇO", title:"Qual intensidade parece possível hoje?", note:"Você sempre pode fazer menos durante a sessão.", content:<ChoiceGrid items={intensities} value={intensity} onPick={setIntensity}/>},
     {eyebrow:"ESTÍMULO", title:"A música ajuda você a começar?", note:"Sem login no Spotify. Se quiser, abrimos uma busca pronta para a sessão.", content:<MoodGrid items={musicPrefs} value={music} onPick={setMusic}/>},
+    {eyebrow:"OBJETIVO FÍSICO", title:"Qual é seu objetivo principal agora?", note:"Isso ajusta as orientações de alimentação e recuperação, sem transformar o app em uma dieta prescrita.", content:<MoodGrid items={goals} value={goal} onPick={setGoal}/>},
     {eyebrow:"TEMPO REAL", title:"Quanto tempo você tem de verdade?", note:"O app monta a sessão dentro desse limite.", content:<TimeGrid value={time} onPick={setTime}/>}
   ];
 
   const s=screens[step];
-  const progress=Math.round((step/7)*100);
+  const progress=Math.round((step/8)*100);
 
   return <main className="app">
     <Header onHome={()=>setStep(0)}/>
     <section className="screen questionnaire">
       <div className="progress"><span style={{width:progress+"%"}}/></div>
-      <div className="questionMeta"><p className="step">0{step} / 07</p><span>{s.eyebrow}</span></div>
+      <div className="questionMeta"><p className="step">0{step} / 08</p><span>{s.eyebrow}</span></div>
       <h2>{s.title}</h2>
       <p className="questionNote">{s.note}</p>
       {s.content}
       <div className="actions">
         <button className="back" onClick={()=>setStep(step-1)} aria-label="Voltar"><ArrowLeft size={18}/></button>
-        <button className="primary" onClick={()=>setStep(step===7?8:step+1)}>{step===7?"Criar minha sessão":"Continuar"} <ArrowRight size={18}/></button>
+        <button className="primary" onClick={()=>setStep(step===8?9:step+1)}>{step===8?"Criar minha sessão":"Continuar"} <ArrowRight size={18}/></button>
       </div>
-      <button className="historyLink" onClick={()=>setStep(11)}><History size={16}/> Ver o que já funcionou</button>
+      <button className="historyLink" onClick={()=>setStep(12)}><History size={16}/> Ver o que já funcionou</button>
     </section>
   </main>;
 }
@@ -552,4 +613,21 @@ function Stats({history}){
     <div><span>Terminou melhor</span><b>{rate}%</b></div>
     <div><span>Seu melhor padrão</span><b>{favorite}</b></div>
   </div>;
+}
+function NutritionCard({recommendation,goal}){
+  const guide=nutritionGuide(recommendation,goal);
+  return <section className="nutritionCard">
+    <div className="nutritionHead">
+      <div className="nutritionIcon">🍌</div>
+      <div><span>COMER PARA SE MOVIMENTAR</span><b>Como se preparar para esta sessão</b></div>
+    </div>
+    <div className="nutritionTimeline">
+      <article><span>ONTEM / HOJE CEDO</span><p>{guide.dayBefore}</p></article>
+      <article><span>1–3H ANTES</span><p>{guide.pre}</p><div className="foodChips">{guide.examples.map(x=><i key={x}>{x}</i>)}</div></article>
+      <article><span>DURANTE</span><p>{guide.during}</p></article>
+      <article><span>DEPOIS</span><p>{guide.after}</p></article>
+    </div>
+    <p className="nutritionGoal"><b>Para seu objetivo:</b> {guide.goalNote}</p>
+    <small>Orientação geral de alimentação esportiva. Necessidades individuais, condições de saúde, alergias e metas clínicas devem ser avaliadas por nutricionista.</small>
+  </section>;
 }
