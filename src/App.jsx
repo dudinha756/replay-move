@@ -63,7 +63,7 @@ const library = [
     id:"breath", type:"Respiração guiada", icon:Wind, intensity:"light", min:5,
     env:["home","gym","outdoor","anywhere"], targets:["calm","focused"], energy:["low","medium","high"],
     prompt:"Uma pausa ativa para reduzir o ritmo e reorganizar a atenção.",
-    tags:["Garmin-inspired","sem equipamento"],
+    tags:["baixo impacto","sem equipamento"],
     routines:{
       5:["1 min · respiração natural","3 min · inspire 4s e expire 6s, sem prender o ar","1 min · volte ao ritmo natural e observe o corpo"],
       10:["2 min · respiração natural","6 min · inspire 4s e expire 6s, de forma confortável","2 min · respiração livre e atenção aos pontos de tensão"],
@@ -75,7 +75,7 @@ const library = [
     id:"meditation", type:"Meditação guiada", icon:Brain, intensity:"light", min:5,
     env:["home","outdoor","anywhere"], targets:["calm","focused","free"], energy:["low","medium","high"],
     prompt:"Sente-se ou deite-se de forma confortável e use a sessão para criar espaço mental.",
-    tags:["Garmin-inspired","baixo atrito"],
+    tags:["mente & corpo","baixo atrito"],
     routines:{
       5:["1 min · escolha uma intenção simples","3 min · observe respiração, sons e sensações sem corrigir nada","1 min · perceba o que mudou"],
       10:["2 min · chegada","6 min · atenção na respiração; quando dispersar, volte sem julgamento","2 min · atenção aberta"],
@@ -87,7 +87,7 @@ const library = [
     id:"mobility", type:"Mobilidade", icon:Waves, intensity:"light", min:5,
     env:["home","gym","outdoor","anywhere"], targets:["calm","free","focused"], energy:["low","medium"],
     prompt:"Movimentos controlados para ombros, quadris e coluna, sem forçar amplitude.",
-    tags:["Garmin-inspired","sem equipamento"],
+    tags:["baixo impacto","sem equipamento"],
     routines:{
       5:["40s · círculos de ombro","40s · gato-vaca","40s · rotação torácica","40s · 90/90 de quadril","40s · mobilidade de tornozelo","1m40 · repetir o que mais ajudou"],
       10:["1 min · ombros e pescoço","2 min · gato-vaca + rotação torácica","2 min · 90/90 de quadril","2 min · agachamento assistido e tornozelo","3 min · flow livre"],
@@ -99,7 +99,7 @@ const library = [
     id:"walk", type:"Caminhada consciente", icon:Footprints, intensity:"light", min:10,
     env:["outdoor","gym","anywhere"], targets:["calm","focused","free","energized"], energy:["low","medium","high"],
     prompt:"Caminhe num ritmo confortável; se quiser energia, aumente gradualmente o passo.",
-    tags:["Garmin-inspired","baixo impacto"],
+    tags:["aeróbico","baixo impacto"],
     routines:{
       5:["1 min · passo fácil","3 min · ritmo confortável","1 min · desacelere"],
       10:["2 min · passo fácil","6 min · ritmo constante","2 min · desacelere"],
@@ -135,7 +135,7 @@ const library = [
     id:"hiit", type:"HIIT acessível", icon:HeartPulse, intensity:"intense", min:10,
     env:["home","gym","outdoor","anywhere"], targets:["energized","strong","playful"], energy:["medium","high"],
     prompt:"Intervalos curtos com opção de baixo impacto. Intensidade é ajustável: técnica vem antes da velocidade.",
-    tags:["Garmin-inspired","cardio"],
+    tags:["intervalado","cardio"],
     routines:{
       5:["5 × 30s marcha rápida ou polichinelo baixo impacto + 30s leve"],
       10:["2 min · aquecer","6 × 30s esforço / 30s leve","2 min · desacelerar"],
@@ -147,7 +147,7 @@ const library = [
     id:"yoga", type:"Yoga flow", icon:PersonStanding, intensity:"light", min:10,
     env:["home","outdoor","anywhere"], targets:["calm","focused","free"], energy:["low","medium"],
     prompt:"Uma sequência fluida, sem buscar posições extremas. Respiração e controle são prioridade.",
-    tags:["Garmin-inspired","mobilidade"],
+    tags:["mobilidade","controle"],
     routines:{
       5:["1 min · respiração","1 min · gato-vaca","1 min · cão olhando para baixo adaptado","1 min · postura da criança","1 min · alongamento em pé"],
       10:["2 min · respiração + gato-vaca","2 min · mobilidade de quadril","3 min · flow em pé","2 min · postura da criança","1 min · fechamento"],
@@ -159,7 +159,7 @@ const library = [
     id:"pilates", type:"Pilates essencial", icon:CircleDot, intensity:"moderate", min:10,
     env:["home","gym","anywhere"], targets:["focused","strong","free"], energy:["medium","high"],
     prompt:"Controle, estabilidade e respiração em uma sessão simples de solo.",
-    tags:["Garmin-inspired","core"],
+    tags:["core","controle"],
     routines:{
       5:["45s · ponte","45s · dead bug","45s · bird dog","45s · clam por lado","1 min · respiração"],
       10:["2 voltas · 10 pontes","2 voltas · 8 dead bug por lado","2 voltas · 8 bird dog por lado","2 voltas · 10 clam por lado"],
@@ -398,6 +398,7 @@ export default function App(){
   const [music,setMusic] = useState("yes");
   const [goal,setGoal] = useState("performance");
   const [after,setAfter] = useState("");
+  const [resultTab,setResultTab] = useState("movement");
   const [history,setHistory] = useState(readHistory);
 
   const context = {current,target,time,energy,environment,intensity,music,goal};
@@ -430,7 +431,7 @@ export default function App(){
   if(step===0) return <main className="app landing">
     <header className="landingHeader">
       <div className="badge">MOOD → MOVEMENT</div>
-      <button className="historyMini" onClick={()=>setStep(12)}><History size={15}/> Meu histórico</button>
+      <button className="historyMini" onClick={()=>setStep(11)}><History size={15}/> Meu histórico</button>
     </header>
 
     <section className="hero">
@@ -467,14 +468,18 @@ export default function App(){
     <section className="screen result">
       <p className="kicker">SEU PRÓXIMO PASSO</p>
       <h2>{recommendation.type}</h2>
-      <RecommendationCard recommendation={recommendation}/>
-      <div className="why">
-        <b>Por que isso apareceu para você?</b>
-        <ul>{recommendation.reasons.map((r,i)=><li key={i}>{r}</li>)}</ul>
-        <p className="learning">{recommendation.learned>0 ? "Seu histórico já está influenciando esta escolha." : "Esta é uma recomendação inicial. Depois da sessão, diga como você ficou para o app aprender com você."}</p>
+      <div className="resultTabs">
+        <button className={resultTab==="movement"?"active":""} onClick={()=>setResultTab("movement")}>🏃 Movimento</button>
+        <button className={resultTab==="nutrition"?"active":""} onClick={()=>setResultTab("nutrition")}>🍌 Alimentação</button>
       </div>
-      <NutritionCard recommendation={recommendation} goal={goal}/>
-
+      {resultTab==="movement" ? <>
+        <RecommendationCard recommendation={recommendation}/>
+        <div className="why">
+          <b>Por que isso apareceu para você?</b>
+          <ul>{recommendation.reasons.map((r,i)=><li key={i}>{r}</li>)}</ul>
+          <p className="learning">{recommendation.learned>0 ? "Seu histórico já está influenciando esta escolha." : "Esta é uma recomendação inicial. Depois da sessão, diga como você ficou para o app aprender com você."}</p>
+        </div>
+      </> : <NutritionCard recommendation={recommendation} goal={goal}/>}
       <div className="resultActions">
         <button className="primary full" onClick={()=>setStep(10)}><Play size={18}/> Começar agora</button>
         <button className="secondary full" onClick={()=>setStep(8)}><ArrowLeft size={18}/> Ajustar escolhas</button>
@@ -573,7 +578,7 @@ export default function App(){
         <button className="back" onClick={()=>setStep(step-1)} aria-label="Voltar"><ArrowLeft size={18}/></button>
         <button className="primary" onClick={()=>setStep(step===8?9:step+1)}>{step===8?"Criar minha sessão":"Continuar"} <ArrowRight size={18}/></button>
       </div>
-      <button className="historyLink" onClick={()=>setStep(12)}><History size={16}/> Ver o que já funcionou</button>
+      <button className="historyLink" onClick={()=>setStep(11)}><History size={16}/> Ver o que já funcionou</button>
     </section>
   </main>;
 }
